@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AyuAware // System Flows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:       #0C0E0D;
+  --surface:  #131615;
+  --surface2: #181B19;
+  --border:   #242824;
+  --border2:  #2E342E;
+  --text:     #D4D8D4;
+  --text2:    #6A7A6A;
+  --text3:    #3E4A3E;
+  --mono:     'JetBrains Mono', 'Fira Code', monospace;
+
+  --c-user:     #E8A844;
+  --c-front:    #4A9B7A;
+  --c-backend:  #5A8AE8;
+  --c-db:       #C87AE0;
+
+  --c-flow-1:   #E8A844;
+  --c-flow-2:   #4AC890;
+  --c-flow-3:   #5A8AE8;
+  --c-flow-4:   #9B6AE8;
+  --c-flow-5:   #E86A6A;
+  --c-flow-6:   #4AE8C8;
+  --c-flow-7:   #E87A4A;
+}
+
+html,body{
+  height:100%; background:var(--bg);
+  color:var(--text); font-family:var(--mono);
+  font-size:13px; overflow-x:hidden;
+}
+
+/* ── scrollbar ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#2E342E;border-radius:2px}
+
+/* ── HEADER ── */
+#header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(12,14,13,.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:14px 28px;
+  display:flex;align-items:baseline;gap:16px;
+}
+.logo-text{font-size:15px;font-weight:600;color:#fff;letter-spacing:-.3px}
+.logo-text span{color:var(--c-flow-2)}
+.logo-comment{color:var(--text3);font-size:12px;font-weight:300}
+.header-tags{display:flex;gap:8px;margin-left:auto}
+.htag{
+  font-size:10px;font-weight:500;padding:2px 8px;
+  border-radius:3px;border:1px solid var(--border2);
+  color:var(--text2);
+}
+
+/* ── LANE HEADERS ── */
+#lane-headers{
+  display:grid;
+  grid-template-columns: 200px 1fr 1fr 1fr 1fr;
+  gap:0;
+  border-bottom:1px solid var(--border2);
+  background:var(--surface);
+  position:sticky;top:53px;z-index:40;
+}
+.lh-gutter{padding:10px 16px;border-right:1px solid var(--border)}
+.lh{
+  padding:10px 16px;font-size:10px;font-weight:600;
+  letter-spacing:1px;text-transform:uppercase;
+  border-right:1px solid var(--border);
+}
+.lh:last-child{border-right:none}
+.lh.user{color:var(--c-user)}
+.lh.front{color:var(--c-front)}
+.lh.backend{color:var(--c-backend)}
+.lh.db{color:var(--c-db)}
+.lh-line{font-size:9px;font-weight:300;color:var(--text3);display:block;margin-top:1px}
+
+/* ── DATA MODEL BLOCK ── */
+#data-model{
+  margin:24px 28px 0;
+  border:1px solid var(--border2);
+  border-radius:6px;overflow:hidden;
+}
+.dm-header{
+  background:var(--surface2);
+  padding:8px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.dm-title{font-size:10px;font-weight:600;letter-spacing:.8px;color:var(--text2);text-transform:uppercase}
+.dm-subtitle{font-size:10px;color:var(--text3)}
+.dm-body{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0;
+}
+.dm-col{padding:12px 16px;border-right:1px solid var(--border)}
+.dm-col:last-child{border-right:none}
+.dm-col-title{
+  font-size:9px;font-weight:600;letter-spacing:.8px;
+  text-transform:uppercase;margin-bottom:8px;
+}
+.dm-item{
+  font-size:11px;line-height:1.7;color:var(--text2);
+  display:flex;align-items:baseline;gap:8px;
+}
+.dm-item .key{color:var(--text);font-weight:500}
+.dm-item .type{color:var(--text3);font-size:10px}
+.dm-item .arrow-label{color:var(--text3);font-size:10px}
+
+/* ── SECTION DIVIDER ── */
+.section-divider{
+  padding:20px 28px 8px;
+  font-size:9px;font-weight:600;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--text3);
+  display:flex;align-items:center;gap:10px;
+}
+.section-divider::after{
+  content:'';flex:1;height:1px;background:var(--border);
+}
+
+/* ── FLOW ROW ── */
+.flow{
+  margin:0 28px 8px;
+  border:1px solid var(--border);
+  border-radius:6px;overflow:hidden;
+  transition:border-color .15s;
+}
+.flow:hover{border-color:var(--border2)}
+.flow.open{border-color:var(--flow-color,var(--border2))}
+
+/* Flow header bar (always visible) */
+.flow-bar{
+  display:grid;
+  grid-template-columns:200px 1fr 1fr 1fr 1fr;
+  cursor:pointer;
+  background:var(--surface);
+  transition:background .12s;
+}
+.flow-bar:hover{background:var(--surface2)}
+.flow.open .flow-bar{background:var(--surface2)}
+
+.flow-gutter{
+  padding:10px 16px;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;gap:3px;
+}
+.flow-num{font-size:9px;color:var(--text3);font-weight:300}
+.flow-name{
+  font-size:11px;font-weight:600;
+  color:var(--flow-color,var(--text));
+}
+.flow-toggle{
+  margin-top:auto;font-size:9px;color:var(--text3);
+  display:flex;align-items:center;gap:4px;
+}
+.flow-toggle .chevron{transition:transform .2s}
+.flow.open .flow-toggle .chevron{transform:rotate(90deg)}
+
+.lane-cell{
+  padding:10px 14px;
+  border-right:1px solid var(--border);
+  font-size:11px;line-height:1.65;
+  color:var(--text2);
+}
+.lane-cell:last-child{border-right:none}
+.lane-cell .fn{color:var(--text);font-weight:500}
+.lane-cell .ep{color:var(--c-front);font-size:10.5px}
+.lane-cell .op{color:var(--c-backend);font-size:10.5px}
+.lane-cell .sql{color:var(--c-db);font-size:10.5px}
+.lane-cell .cmt{color:var(--text3);font-size:10px;font-weight:300}
+.lane-cell .arg{color:#C87A50;font-size:10px}
+
+/* ── EXPANDED DETAIL ── */
+.flow-detail{
+  display:none;
+  border-top:1px solid var(--border);
+}
+.flow.open .flow-detail{display:block}
+
+.detail-inner{
+  display:grid;
+  grid-template-columns:200px 1fr 1fr 1fr 1fr;
+}
+.detail-gutter{
+  padding:16px;
+  border-right:1px solid var(--border);
+  font-size:10px;color:var(--text3);
+  display:flex;flex-direction:column;gap:4px;
+}
+.detail-gutter .step-num{
+  color:var(--flow-color,var(--text3));
+  font-size:9px;font-weight:600;
+}
+
+.detail-lane{
+  padding:14px;
+  border-right:1px solid var(--border);
+  background:var(--bg);
+}
+.detail-lane:last-child{border-right:none}
+
+.step{
+  margin-bottom:10px;
+  padding:8px 10px;
+  border-left:2px solid var(--border);
+  border-radius:0 4px 4px 0;
+  font-size:11px;line-height:1.6;
+}
+.step.active{border-left-color:var(--flow-color,var(--border2))}
+.step-label{
+  font-size:9px;font-weight:600;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--text3);margin-bottom:3px;
+}
+.step-code{color:var(--text);font-weight:500}
+.step-detail{color:var(--text2);font-size:10.5px}
+.step-result{color:var(--c-flow-2);font-size:10px}
+.step-warn{color:var(--c-flow-5);font-size:10px}
+.step-cmt{color:var(--text3);font-size:10px;font-weight:300}
+
+/* ── AI ENGINE block ── */
+#ai-engine{
+  margin:16px 28px 0;
+  border:1px solid #2A4A3A;
+  border-radius:6px;overflow:hidden;
+}
+.ai-header{
+  background:#0E1A14;
+  padding:8px 16px;
+  border-bottom:1px solid #1A3020;
+  display:flex;align-items:center;gap:10px;
+  cursor:pointer;
+  user-select:none;
+}
+.ai-header:hover{background:#111F18}
+.ai-badge{
+  font-size:9px;font-weight:700;letter-spacing:.8px;
+  padding:2px 8px;border-radius:3px;
+  background:#1A3A28;color:#4AC890;
+  border:1px solid #2A5A3A;text-transform:uppercase;
+}
+.ai-title{font-size:11px;font-weight:600;color:#4AC890}
+.ai-subtitle{font-size:10px;color:var(--text3);margin-left:4px}
+.ai-chevron{margin-left:auto;font-size:10px;color:var(--text3);transition:transform .2s}
+#ai-engine.open .ai-chevron{transform:rotate(90deg)}
+
+/* Pipeline lanes */
+.ai-lanes{
+  display:none;
+  grid-template-columns:repeat(4,1fr);
+  border-top:1px solid #1A3020;
+}
+#ai-engine.open .ai-lanes{display:grid}
+.ai-lane{
+  padding:14px;
+  border-right:1px solid var(--border);
+  background:var(--bg);
+}
+.ai-lane:last-child{border-right:none}
+.ai-lane-title{
+  font-size:9px;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;margin-bottom:10px;
+  padding-bottom:6px;border-bottom:1px solid var(--border);
+}
+
+/* Token budget bar */
+.token-bar{
+  height:4px;border-radius:2px;background:#1A2A1A;
+  margin:4px 0 2px;overflow:hidden;
+}
+.token-fill{height:100%;border-radius:2px;transition:width .3s}
+
+/* Tool pill */
+.tool-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:9px;font-weight:500;
+  padding:2px 7px;border-radius:3px;
+  background:#131615;color:var(--text2);
+  border:1px solid var(--border);
+  margin:2px 2px 2px 0;cursor:default;
+  white-space:nowrap;
+}
+.tool-pill.safety{border-color:#B83040;color:#E86A6A}
+.tool-pill.protocol{border-color:#4AE8C8;color:#4AE8C8}
+.tool-pill.data{border-color:#5A8AE8;color:#5A8AE8}
+.tool-pill.knowledge{border-color:#C87AE0;color:#C87AE0}
+
+/* Stream diagram */
+.stream-step{
+  display:flex;align-items:flex-start;gap:8px;
+  margin-bottom:8px;font-size:10.5px;
+}
+.stream-dot{
+  width:6px;height:6px;border-radius:50%;
+  flex-shrink:0;margin-top:3px;
+}
+.stream-line{
+  border-left:1px dashed var(--border);
+  margin-left:2px;padding-left:10px;
+  margin-bottom:6px;
+}
+
+/* Response type rows */
+.resp-row{
+  display:flex;align-items:baseline;gap:6px;
+  font-size:10.5px;margin-bottom:5px;
+}
+.resp-type{
+  font-size:9px;font-weight:600;padding:1px 6px;
+  border-radius:3px;border:1px solid currentColor;
+  white-space:nowrap;
+}
+
+/* trigger badge */
+.trigger{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:9px;font-weight:600;letter-spacing:.5px;
+  padding:2px 7px;border-radius:3px;
+  text-transform:uppercase;
+  border:1px solid currentColor;
+  opacity:.7;
+  margin-bottom:6px;
+}
+
+/* arrow connector */
+.connector{
+  display:flex;align-items:center;
+  color:var(--text3);font-size:11px;
+  padding:2px 0;
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE — mobile ≤ 768px
+══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Base: allow page scroll ── */
+  html, body { height: auto; overflow-x: hidden; }
+
+  /* ── Header ── */
+  #header {
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .logo-comment { display: none; }
+  .header-tags { margin-left: 0; flex-wrap: wrap; gap: 4px; }
+  .htag { font-size: 9px; padding: 2px 6px; }
+
+  /* ── Lane headers: hide (replaced by labels in expanded view) ── */
+  #lane-headers { display: none; }
+
+  /* ── Data model: stack columns ── */
+  #data-model { margin: 12px 12px 0; }
+  .dm-body { grid-template-columns: 1fr; }
+  .dm-col { border-right: none; border-bottom: 1px solid var(--border); }
+  .dm-col:last-child { border-bottom: none; }
+
+  /* ── Section divider ── */
+  .section-divider { padding: 14px 12px 6px; font-size: 8px; }
+
+  /* ── Flow rows ── */
+  .flow { margin: 0 12px 8px; }
+
+  /* Compact flow bar: hide lane columns, show only gutter */
+  .flow-bar {
+    grid-template-columns: 1fr;
+  }
+  .flow-bar .lane-cell { display: none; }
+  .flow-gutter {
+    border-right: none;
+    border-bottom: none;
+    padding: 12px 16px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .flow-name { font-size: 12px; }
+  .flow-toggle { margin-top: 0; }
+
+  /* Expanded detail: stack lanes vertically */
+  .detail-inner {
+    grid-template-columns: 1fr;
+  }
+  .detail-gutter { display: none; } /* hide step-number sidebar */
+  .detail-lane {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-lane:last-child { border-bottom: none; }
+
+  /* Lane labels in expanded mobile view (via ::before) */
+  .detail-lane:nth-child(2)::before {
+    content: '01  USER';
+    display: block;
+    font-size: 9px; font-weight: 700; letter-spacing: .8px;
+    text-transform: uppercase;
+    color: var(--c-user);
+    padding: 6px 14px 4px;
+    border-bottom: 1px solid var(--border);
+    margin: -14px -14px 10px;
+  }
+  .detail-lane:nth-child(3)::before {
+    content: '02  APP_FRONTEND';
+    display: block;
+    font-size: 9px; font-weight: 700; letter-spacing: .8px;
+    text-transform: uppercase;
+    color: var(--c-front);
+    padding: 6px 14px 4px;
+    border-bottom: 1px solid var(--border);
+    margin: -14px -14px 10px;
+  }
+  .detail-lane:nth-child(4)::before {
+    content: '03  BACKEND_API';
+    display: block;
+    font-size: 9px; font-weight: 700; letter-spacing: .8px;
+    text-transform: uppercase;
+    color: var(--c-backend);
+    padding: 6px 14px 4px;
+    border-bottom: 1px solid var(--border);
+    margin: -14px -14px 10px;
+  }
+  .detail-lane:nth-child(5)::before {
+    content: '04  DATABASE';
+    display: block;
+    font-size: 9px; font-weight: 700; letter-spacing: .8px;
+    text-transform: uppercase;
+    color: var(--c-db);
+    padding: 6px 14px 4px;
+    border-bottom: 1px solid var(--border);
+    margin: -14px -14px 10px;
+  }
+
+  /* ── AI Engine: stack lanes ── */
+  #ai-engine { margin: 12px 12px 0; }
+  .ai-header { padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
+  .ai-title { font-size: 10px; }
+  .ai-subtitle { display: none; }
+  .ai-lanes { grid-template-columns: 1fr; }
+  .ai-lane {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .ai-lane:last-child { border-bottom: none; }
+
+  /* ── UI Contract ── */
+  #ui-contract { margin: 12px 12px 0; }
+  #ui-contract > div:first-child { flex-wrap: wrap; gap: 6px; padding: 8px 12px; }
+  #ui-contract span:nth-child(3) { display: none; } /* hide subtitle */
+
+  /* Stack all inner grids in UI contract to 1 column */
+  #ui-contract [style*="grid-template-columns:1fr 1fr 1fr 1fr"],
+  #ui-contract [style*="grid-template-columns: 1fr 1fr 1fr 1fr"],
+  #ui-contract [style*="grid-template-columns:1fr 1fr 1fr"],
+  #ui-contract [style*="grid-template-columns: 1fr 1fr 1fr"],
+  #ui-contract [style*="grid-template-columns:1fr 1fr"],
+  #ui-contract [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Footer ── */
+  #footer {
+    margin: 20px 12px 16px;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+  }
+  #footer .footer-item:last-child { margin-left: 0; }
+}
+
+/* ── FOOTER ── */
+#footer{
+  margin:32px 28px 24px;
+  padding:12px 16px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-size:10px;color:var(--text3);
+  display:flex;gap:20px;flex-wrap:wrap;
+}
+.footer-item{display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <span class="logo-text">Ayu<span>Aware</span></span>
+  <span class="logo-comment">// system_architecture &amp; interaction_flows</span>
+  <div class="header-tags">
+    <span class="htag">4 layers</span>
+    <span class="htag">7 flows</span>
+    <span class="htag">2 data models</span>
+    <span class="htag">backend_overview_v1</span>
+  </div>
+</div>
+
+<div id="lane-headers">
+  <div class="lh-gutter">
+    <span style="font-size:9px;color:var(--text3);letter-spacing:.5px">FLOW_ID</span>
+  </div>
+  <div class="lh user">
+    01&nbsp;USER
+    <span class="lh-line">what the user does</span>
+  </div>
+  <div class="lh front">
+    02&nbsp;APP_FRONTEND
+    <span class="lh-line">iOS · React Native</span>
+  </div>
+  <div class="lh backend">
+    03&nbsp;BACKEND_API
+    <span class="lh-line">NestJS · BullMQ</span>
+  </div>
+  <div class="lh db">
+    04&nbsp;DATABASE
+    <span class="lh-line">PostgreSQL · TimescaleDB</span>
+  </div>
+</div>
+
+<!-- ── DATA MODEL BLOCK ── -->
+<div id="data-model">
+  <div class="dm-header">
+    <span class="dm-title">core_data_model</span>
+    <span class="dm-subtitle">// the two layers that every flow reads from or writes to</span>
+  </div>
+  <div class="dm-body">
+    <div class="dm-col">
+      <div class="dm-col-title" style="color:var(--c-flow-1)">static_layer // prakriti</div>
+      <div class="dm-item"><span class="key">user_constitution</span><span class="arrow-label">→ set once at onboarding, never changes</span></div>
+      <div class="dm-item" style="padding-left:16px"><span class="type">vata_percentage</span><span class="arrow-label"> · </span><span class="type">pitta_percentage</span><span class="arrow-label"> · </span><span class="type">kapha_percentage</span></div>
+      <div class="dm-item" style="padding-left:16px"><span class="type">dominant_type</span><span class="arrow-label"> · </span><span class="type">assessment_responses[]</span></div>
+    </div>
+    <div class="dm-col">
+      <div class="dm-col-title" style="color:var(--c-flow-2)">dynamic_layer // vikriti</div>
+      <div class="dm-item"><span class="key">user_current_state</span><span class="arrow-label">→ updated by every data stream</span></div>
+      <div class="dm-item" style="padding-left:16px"><span class="type">vata_imbalance</span><span class="arrow-label"> · </span><span class="type">pitta_imbalance</span><span class="arrow-label"> · </span><span class="type">kapha_imbalance</span></div>
+      <div class="dm-item" style="padding-left:16px"><span class="type">agni_state</span><span class="arrow-label"> (sama|vishama|tikshna|manda)</span></div>
+      <div class="dm-item" style="padding-left:16px"><span class="type">ama_level</span><span class="arrow-label"> · </span><span class="type">ojas_level 1–10</span><span class="arrow-label"> · </span><span class="type">active_symptoms[]</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── AI ENGINE ── -->
+<div id="ai-engine">
+  <div class="ai-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="ai-badge">AI_ENGINE</span>
+    <span class="ai-title">claude_api // request → stream → tool_execution → response</span>
+    <span class="ai-subtitle">// underlies flows 03, 06, 07 and all background jobs</span>
+    <span class="ai-chevron">▶</span>
+  </div>
+
+  <div class="ai-lanes">
+
+    <!-- Lane 1: System Prompt -->
+    <div class="ai-lane">
+      <div class="ai-lane-title" style="color:#C87AE0">01 system_prompt</div>
+
+      <div class="step active" style="border-left-color:#C87AE0;margin-bottom:8px">
+        <div class="step-label">static base ~15k tokens</div>
+        <div class="step-code">Master_Prompt.txt</div>
+        <div class="step-cmt">// loaded at server start</div>
+        <div class="step-cmt">// cached in Redis</div>
+      </div>
+
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px">contains:</div>
+      <div class="step active" style="border-left-color:#3A3050">
+        <div class="step-detail">identity &amp; role definition</div>
+        <div class="step-detail">communication style rules</div>
+        <div class="step-detail">dosha knowledge (Vata/Pitta/Kapha)</div>
+        <div class="step-detail">Agni · Ama · Ojas concepts</div>
+        <div class="step-detail">herb safety framework</div>
+        <div class="step-detail">six tastes · seasonal routines</div>
+        <div class="step-detail">medical boundary rules</div>
+        <div class="step-detail">emergency detection keywords</div>
+        <div class="step-detail">response quality guidelines</div>
+      </div>
+
+      <div class="step active" style="border-left-color:#C87AE0;margin-top:8px">
+        <div class="step-label">dynamic context block ~2–8k tokens</div>
+        <div class="step-code">assembled per request</div>
+        <div class="step-cmt">// appended after base prompt</div>
+      </div>
+    </div>
+
+    <!-- Lane 2: Context Assembly -->
+    <div class="ai-lane">
+      <div class="ai-lane-title" style="color:#5A8AE8">02 context_assembly</div>
+
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px">priority order (trimmed if over budget):</div>
+
+      <div class="stream-step">
+        <div class="stream-dot" style="background:#C87AE0"></div>
+        <div>
+          <div style="font-size:10.5px;font-weight:600;color:var(--text)">user_constitution</div>
+          <div style="font-size:10px;color:var(--text3)">Prakriti // always included, never trimmed</div>
+        </div>
+      </div>
+      <div class="stream-line" style="height:4px"></div>
+
+      <div class="stream-step">
+        <div class="stream-dot" style="background:#4AC890"></div>
+        <div>
+          <div style="font-size:10.5px;font-weight:600;color:var(--text)">user_current_state</div>
+          <div style="font-size:10px;color:var(--text3)">Vikriti // always included</div>
+        </div>
+      </div>
+      <div class="stream-line" style="height:4px"></div>
+
+      <div class="stream-step">
+        <div class="stream-dot" style="background:#4AE8C8"></div>
+        <div>
+          <div style="font-size:10.5px;font-weight:600;color:var(--text)">active_protocol.summary</div>
+          <div style="font-size:10px;color:var(--text3)">current phase + today's recs</div>
+        </div>
+      </div>
+      <div class="stream-line" style="height:4px"></div>
+
+      <div class="stream-step">
+        <div class="stream-dot" style="background:#E8A844"></div>
+        <div>
+          <div style="font-size:10.5px;font-weight:600;color:var(--text)">last_N_checkins</div>
+          <div style="font-size:10px;color:var(--text3)">7 days of check-in summaries</div>
+        </div>
+      </div>
+      <div class="stream-line" style="height:4px"></div>
+
+      <div class="stream-step">
+        <div class="stream-dot" style="background:#5A8AE8"></div>
+        <div>
+          <div style="font-size:10.5px;font-weight:600;color:var(--text)">conversation_history</div>
+          <div style="font-size:10px;color:var(--text3)">last N msgs // trimmed first if over budget</div>
+        </div>
+      </div>
+      <div class="stream-line" style="height:4px"></div>
+
+      <div class="stream-step">
+        <div class="stream-dot" style="background:var(--text3)"></div>
+        <div>
+          <div style="font-size:10.5px;font-weight:600;color:var(--text)">date + season + time_of_day</div>
+          <div style="font-size:10px;color:var(--text3)">user timezone + locale</div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:8px">token budget by tier:</div>
+      <div style="font-size:10px;color:var(--text2);margin-top:4px">
+        Free &nbsp;&nbsp;&nbsp;<div class="token-bar"><div class="token-fill" style="width:19%;background:#E8A844"></div></div>
+        <span style="color:var(--text3)">~19k · Haiku · 5 msg history</span>
+      </div>
+      <div style="font-size:10px;color:var(--text2);margin-top:2px">
+        Personal <div class="token-bar"><div class="token-fill" style="width:25%;background:#4AC890"></div></div>
+        <span style="color:var(--text3)">~25k · Sonnet · 10 msg history</span>
+      </div>
+      <div style="font-size:10px;color:var(--text2);margin-top:2px">
+        Premium &nbsp;<div class="token-bar"><div class="token-fill" style="width:33%;background:#5A8AE8"></div></div>
+        <span style="color:var(--text3)">~33k · Sonnet · 20 msg history</span>
+      </div>
+    </div>
+
+    <!-- Lane 3: Claude API + Tool Execution -->
+    <div class="ai-lane">
+      <div class="ai-lane-title" style="color:#4AC890">03 claude_api + tool_execution</div>
+
+      <div class="step active" style="border-left-color:#4AC890;margin-bottom:10px">
+        <div class="step-label">api call</div>
+        <div class="step-code">model: claude-sonnet-4-5</div>
+        <div class="step-code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;claude-haiku-3 (Free tier)</div>
+        <div class="step-code">max_tokens: 2048–4096</div>
+        <div class="step-code">stream: true</div>
+        <div class="step-code">tools: AYUAWARE_TOOLS[10]</div>
+      </div>
+
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px">10 tools available to Claude:</div>
+      <div style="margin-bottom:10px">
+        <span class="tool-pill safety">detect_emergency</span>
+        <span class="tool-pill safety">check_herb_safety</span>
+        <span class="tool-pill protocol">create_protocol</span>
+        <span class="tool-pill protocol">modify_protocol</span>
+        <span class="tool-pill protocol">get_active_protocols</span>
+        <span class="tool-pill data">log_checkin</span>
+        <span class="tool-pill data">log_manual_entry</span>
+        <span class="tool-pill data">get_user_health_summary</span>
+        <span class="tool-pill knowledge">lookup_herb</span>
+        <span class="tool-pill knowledge">lookup_food</span>
+      </div>
+
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;border-top:1px solid var(--border);padding-top:8px">stream processing loop:</div>
+
+      <div class="stream-step">
+        <div class="stream-dot" style="background:#4AC890"></div>
+        <div>
+          <div style="font-size:10px;color:var(--text)">event: content_block_delta</div>
+          <div style="font-size:10px;color:var(--text3)">type: text_delta</div>
+          <div style="font-size:10px;color:#4AC890">→ emit WS chat:chunk</div>
+        </div>
+      </div>
+
+      <div class="stream-step" style="margin-top:4px">
+        <div class="stream-dot" style="background:#E8A844"></div>
+        <div>
+          <div style="font-size:10px;color:var(--text)">event: content_block_start</div>
+          <div style="font-size:10px;color:var(--text3)">type: tool_use</div>
+          <div style="font-size:10px;color:#E8A844">→ PAUSE forwarding to client</div>
+          <div style="font-size:10px;color:#E8A844">→ ToolExecutorService.run()</div>
+          <div style="font-size:10px;color:var(--text3)">→ return tool_result to Claude</div>
+          <div style="font-size:10px;color:#E8A844">→ RESUME stream</div>
+        </div>
+      </div>
+
+      <div class="stream-step" style="margin-top:4px">
+        <div class="stream-dot" style="background:#5A8AE8"></div>
+        <div>
+          <div style="font-size:10px;color:var(--text)">event: message_stop</div>
+          <div style="font-size:10px;color:var(--text3)">stream complete</div>
+          <div style="font-size:10px;color:#5A8AE8">→ emit WS chat:complete</div>
+          <div style="font-size:10px;color:var(--text3)">→ save to DB</div>
+        </div>
+      </div>
+
+      <div class="stream-step" style="margin-top:4px">
+        <div class="stream-dot" style="background:#E86A6A"></div>
+        <div>
+          <div style="font-size:10px;color:var(--text)">detect_emergency called</div>
+          <div style="font-size:10px;color:var(--text3)">overrides normal flow</div>
+          <div style="font-size:10px;color:#E86A6A">→ emit emergency template</div>
+          <div style="font-size:10px;color:#E86A6A">→ log safety event</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lane 4: Response Formulation -->
+    <div class="ai-lane">
+      <div class="ai-lane-title" style="color:#E8A844">04 response_formulation</div>
+
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px">Claude's output determines message_type:</div>
+
+      <div class="resp-row">
+        <span class="resp-type" style="color:#D4D8D4;border-color:#3A4A3A">text</span>
+        <span style="font-size:10px;color:var(--text2)">standard chat bubble</span>
+      </div>
+      <div style="font-size:9px;color:var(--text3);padding-left:2px;margin-bottom:8px">plain Ayurvedic guidance, Q&amp;A, explanations</div>
+
+      <div class="resp-row">
+        <span class="resp-type" style="color:#4AE8C8;border-color:#2A5A4A">protocol_card</span>
+        <span style="font-size:10px;color:var(--text2)">tappable card</span>
+      </div>
+      <div style="font-size:9px;color:var(--text3);padding-left:2px;margin-bottom:8px">rendered when create/modify_protocol tool executes<br>shows: name · phase · top 3 recs · "View Protocol" CTA</div>
+
+      <div class="resp-row">
+        <span class="resp-type" style="color:#5A8AE8;border-color:#2A3A6A">summary_card</span>
+        <span style="font-size:10px;color:var(--text2)">structured card</span>
+      </div>
+      <div style="font-size:9px;color:var(--text3);padding-left:2px;margin-bottom:8px">morning summary · check-in result · scan analysis<br>structured JSON in messages.structured_data</div>
+
+      <div class="resp-row">
+        <span class="resp-type" style="color:#C87AE0;border-color:#4A2A6A">visualization</span>
+        <span style="font-size:10px;color:var(--text2)">chart embed</span>
+      </div>
+      <div style="font-size:9px;color:var(--text3);padding-left:2px;margin-bottom:8px">dosha trend · HRV graph · adherence chart</div>
+
+      <div class="resp-row">
+        <span class="resp-type" style="color:#E8A844;border-color:#5A4A1A">quick_action</span>
+        <span style="font-size:10px;color:var(--text2)">action row</span>
+      </div>
+      <div style="font-size:9px;color:var(--text3);padding-left:2px;margin-bottom:10px">scrollable buttons: Start Check-In · View Protocol · etc.</div>
+
+      <div style="border-top:1px solid var(--border);padding-top:8px;font-size:10px;color:var(--text3)">saved to messages:</div>
+      <div style="font-size:10px;color:var(--text2);margin-top:4px;line-height:1.7">
+        sender: 'twin'<br>
+        message_type: (above)<br>
+        content: text<br>
+        structured_data: JSONB<br>
+        model_used: 'claude-sonnet-4-5'<br>
+        tokens_used: number<br>
+        tools_called: string[]
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">fallback (high load / Free tier):</div>
+        <div style="font-size:10px;color:var(--text2)">
+          simple FAQ → Haiku (cached 60s)<br>
+          complex task → BullMQ queue<br>
+          <span style="color:#E86A6A">→ push notify when ready</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── UI DATA CONTRACT ── -->
+<div id="ui-contract" style="margin:16px 28px 0;border:1px solid #2A3A4A;border-radius:6px;overflow:hidden">
+
+  <div style="background:#0E1420;padding:8px 16px;border-bottom:1px solid #1A2A3A;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none" onclick="this.parentElement.classList.toggle('open')">
+    <span style="font-size:9px;font-weight:700;letter-spacing:.8px;padding:2px 8px;border-radius:3px;background:#1A2A3A;color:#5A8AE8;border:1px solid #2A3A5A;text-transform:uppercase">UI_DATA_CONTRACT</span>
+    <span style="font-size:11px;font-weight:600;color:#5A8AE8">how Claude output → typed message → UI component</span>
+    <span style="font-size:10px;color:var(--text3);margin-left:4px">// the missing schema layer</span>
+    <span id="uic-chev" style="margin-left:auto;font-size:10px;color:var(--text3);transition:transform .2s">▶</span>
+  </div>
+
+  <div class="uic-body" style="display:none">
+
+    <!-- Row 1: Decision tree — what makes a response typed -->
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface2)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">how message_type is determined // the backend decides, not Claude</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
+
+        <div style="padding:10px;border:1px solid var(--border);border-radius:5px;background:var(--bg)">
+          <div style="font-size:9px;font-weight:700;color:#5A8AE8;margin-bottom:6px;letter-spacing:.5px">TRIGGER: no tool called</div>
+          <div style="font-size:10.5px;color:var(--text);margin-bottom:3px">message_type = <span style="color:#D4D8D4;font-weight:600">'text'</span></div>
+          <div style="font-size:10px;color:var(--text3)">Claude just writes prose<br>→ standard chat bubble<br>structured_data = null</div>
+        </div>
+
+        <div style="padding:10px;border:1px solid #2A5A4A;border-radius:5px;background:var(--bg)">
+          <div style="font-size:9px;font-weight:700;color:#4AE8C8;margin-bottom:6px;letter-spacing:.5px">TRIGGER: create_protocol() or modify_protocol() tool</div>
+          <div style="font-size:10.5px;color:var(--text);margin-bottom:3px">message_type = <span style="color:#4AE8C8;font-weight:600">'protocol_card'</span></div>
+          <div style="font-size:10px;color:var(--text3)">Backend extracts protocol<br>from tool result<br>→ tappable card + CTA</div>
+        </div>
+
+        <div style="padding:10px;border:1px solid #2A3A6A;border-radius:5px;background:var(--bg)">
+          <div style="font-size:9px;font-weight:700;color:#5A8AE8;margin-bottom:6px;letter-spacing:.5px">TRIGGER: generate_morning_summary or log_checkin tool</div>
+          <div style="font-size:10.5px;color:var(--text);margin-bottom:3px">message_type = <span style="color:#5A8AE8;font-weight:600">'summary_card'</span></div>
+          <div style="font-size:10px;color:var(--text3)">Backend shapes structured<br>data from tool result<br>→ data card with labels</div>
+        </div>
+
+        <div style="padding:10px;border:1px solid #3A2A5A;border-radius:5px;background:var(--bg)">
+          <div style="font-size:9px;font-weight:700;color:#C87AE0;margin-bottom:6px;letter-spacing:.5px">TRIGGER: get_user_health_summary with chart_request flag</div>
+          <div style="font-size:10.5px;color:var(--text);margin-bottom:3px">message_type = <span style="color:#C87AE0;font-weight:600">'visualization'</span></div>
+          <div style="font-size:10px;color:var(--text3)">Backend serializes time-<br>series data for chart<br>→ embedded chart component</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Row 2: Structured data schemas -->
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">structured_data schemas // what the frontend receives per message_type</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+
+        <div style="padding:10px;border:1px solid #2A5A4A;border-radius:5px">
+          <div style="font-size:9px;font-weight:700;color:#4AE8C8;margin-bottom:7px">protocol_card.structured_data</div>
+          <div style="font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--text2)">
+            protocol_id: <span style="color:#C87AE0">string</span><br>
+            name: <span style="color:#C87AE0">string</span><br>
+            description: <span style="color:#C87AE0">string</span><br>
+            duration_days: <span style="color:#E8A844">number</span><br>
+            current_phase: <span style="color:#C87AE0">string</span><br>
+            phase_number: <span style="color:#E8A844">number</span><br>
+            total_phases: <span style="color:#E8A844">number</span><br>
+            top_recommendations: <span style="color:#5A8AE8">Rec[]</span><br>
+            <span style="color:var(--text3)">// max 3 for card display</span><br>
+            adherence_pct: <span style="color:#E8A844">number?</span><br>
+            status: <span style="color:#4AE8C8">'draft'|'active'</span><br>
+            cta: <span style="color:#4AE8C8">'activate'|'view'|'view_changes'</span>
+          </div>
+        </div>
+
+        <div style="padding:10px;border:1px solid #2A3A6A;border-radius:5px">
+          <div style="font-size:9px;font-weight:700;color:#5A8AE8;margin-bottom:7px">summary_card.structured_data</div>
+          <div style="font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--text2)">
+            card_type: <span style="color:#4AE8C8">'morning_summary'</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4AE8C8">|'checkin_result'</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4AE8C8">|'scan_result'</span><br>
+            title: <span style="color:#C87AE0">string</span><br>
+            items: <span style="color:#5A8AE8">SummaryItem[]</span><br>
+            <span style="color:var(--text3)">// each item:</span><br>
+            &nbsp;&nbsp;label: <span style="color:#C87AE0">string</span><br>
+            &nbsp;&nbsp;value: <span style="color:#C87AE0">string</span><br>
+            &nbsp;&nbsp;trend: <span style="color:#4AE8C8">'up'|'down'|'stable'?</span><br>
+            &nbsp;&nbsp;status: <span style="color:#4AE8C8">'good'|'warn'|'alert'?</span><br>
+            cta: <span style="color:#C87AE0">string?</span>
+          </div>
+        </div>
+
+        <div style="padding:10px;border:1px solid #3A2A5A;border-radius:5px">
+          <div style="font-size:9px;font-weight:700;color:#C87AE0;margin-bottom:7px">visualization.structured_data</div>
+          <div style="font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--text2)">
+            chart_type: <span style="color:#4AE8C8">'dosha_balance'</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4AE8C8">|'trend_line'</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4AE8C8">|'adherence_bar'</span><br>
+            title: <span style="color:#C87AE0">string</span><br>
+            period: <span style="color:#4AE8C8">'7d'|'30d'|'90d'?</span><br>
+            data: <span style="color:#5A8AE8">ChartData</span><br>
+            <span style="color:var(--text3)">// for dosha_balance:</span><br>
+            &nbsp;&nbsp;current: <span style="color:#5A8AE8">{v,p,k}</span><br>
+            &nbsp;&nbsp;baseline: <span style="color:#5A8AE8">{v,p,k}</span><br>
+            <span style="color:var(--text3)">// for trend_line:</span><br>
+            &nbsp;&nbsp;points: <span style="color:#5A8AE8">[{date, value}]</span><br>
+            &nbsp;&nbsp;metric: <span style="color:#C87AE0">string</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Row 3: How dynamic data gets into Claude -->
+    <div style="padding:14px 16px;background:var(--surface2)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">how data reaches Claude &amp; how Claude injects it into responses</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+
+        <div style="padding:10px;border:1px solid var(--border);border-radius:5px;background:var(--bg)">
+          <div style="font-size:9px;font-weight:700;color:#E8A844;margin-bottom:7px">static reference data</div>
+          <div style="font-size:10.5px;color:var(--text);margin-bottom:4px">Prakriti percentages</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px">Injected into system prompt via context block. Claude reads<br>"vata: 65%, pitta: 25%, kapha: 10%" and<br>references these directly in prose.</div>
+          <div style="font-size:10px;color:var(--text2);border-top:1px solid var(--border);padding-top:6px">
+            Frontend gets Prakriti independently via<br>
+            <span style="color:#E8A844">GET /api/assessment/prakriti</span><br>
+            Does NOT rely on Claude to pass it back.<br>
+            Claude's prose references it; the app<br>renders the DB record directly.
+          </div>
+        </div>
+
+        <div style="padding:10px;border:1px solid var(--border);border-radius:5px;background:var(--bg)">
+          <div style="font-size:9px;font-weight:700;color:#4AC890;margin-bottom:7px">dynamic live data</div>
+          <div style="font-size:10.5px;color:var(--text);margin-bottom:4px">Vikriti / check-in trends / wearable summary</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px">Assembled fresh per request from DB<br>and injected into dynamic context block.<br>Claude references current numbers in prose:<br>"Your HRV has been declining 3 days..."</div>
+          <div style="font-size:10px;color:var(--text2);border-top:1px solid var(--border);padding-top:6px">
+            Frontend renders live state from<br>
+            <span style="color:#4AC890">GET /api/insights/health</span><br>
+            Independently. Claude's summary<br>adds interpretation, the app adds<br>the actual charts and gauges.
+          </div>
+        </div>
+
+        <div style="padding:10px;border:1px solid var(--border);border-radius:5px;background:var(--bg)">
+          <div style="font-size:9px;font-weight:700;color:#C87AE0;margin-bottom:7px">on-demand knowledge lookup</div>
+          <div style="font-size:10.5px;color:var(--text);margin-bottom:4px">Herb properties / food Ayurvedic data</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px">Claude calls lookup_herb() or lookup_food() tool.<br>Tool checks herbs/foods cache table.<br>If not cached → Claude generates from<br>training knowledge → result cached.<br>Claude embeds data in prose response.</div>
+          <div style="font-size:10px;color:var(--text2);border-top:1px solid var(--border);padding-top:6px">
+            <span style="color:#E86A6A">No separate frontend fetch.</span><br>
+            Herb/food data lives only in<br>Claude's prose response + cache.<br>Cache = <span style="color:#C87AE0">herbs</span> / <span style="color:#C87AE0">foods</span> tables<br>ai_generated = true until reviewed.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- The message object wire format -->
+      <div style="margin-top:12px;padding:10px;border:1px solid var(--border);border-radius:5px;background:var(--bg)">
+        <div style="font-size:9px;font-weight:700;color:var(--text3);margin-bottom:7px;letter-spacing:.5px">WIRE FORMAT // what the backend saves and the frontend receives for every message</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:4px">messages table row (saved to DB):</div>
+            <div style="font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--text2)">
+              id: <span style="color:#C87AE0">UUID</span><br>
+              conversation_id: <span style="color:#C87AE0">UUID</span><br>
+              sender: <span style="color:#4AE8C8">'twin'</span><br>
+              message_type: <span style="color:#4AE8C8">'text'|'protocol_card'|'summary_card'|'visualization'|'quick_action'</span><br>
+              content: <span style="color:#C87AE0">string</span> &nbsp;<span style="color:var(--text3)">// Claude's prose, always present</span><br>
+              structured_data: <span style="color:#5A8AE8">JSONB|null</span> &nbsp;<span style="color:var(--text3)">// type-specific schema above</span><br>
+              model_used: <span style="color:#C87AE0">string</span><br>
+              tokens_used: <span style="color:#E8A844">number</span><br>
+              tools_called: <span style="color:#5A8AE8">string[]</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:4px">frontend rendering rule:</div>
+            <div style="font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--text2)">
+              <span style="color:var(--text3)">// React Native switch on message_type:</span><br>
+              'text' &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ <span style="color:#4AC890">&lt;TextBubble content /&gt;</span><br>
+              'protocol_card' &nbsp;→ <span style="color:#4AE8C8">&lt;ProtocolCard data={structured_data} /&gt;</span><br>
+              'summary_card' &nbsp;&nbsp;→ <span style="color:#5A8AE8">&lt;SummaryCard data={structured_data} /&gt;</span><br>
+              'visualization' &nbsp;→ <span style="color:#C87AE0">&lt;ChartEmbed data={structured_data} /&gt;</span><br>
+              'quick_action' &nbsp;&nbsp;→ <span style="color:#E8A844">&lt;ActionRow actions={structured_data.actions} /&gt;</span><br>
+              <span style="color:var(--text3)"><br>// content (prose) always rendered ABOVE the card</span><br>
+              <span style="color:var(--text3)">// structured_data drives the UI component BELOW it</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section-divider">interaction_flows // click any row to expand</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FLOW 01 — ONBOARDING
+═══════════════════════════════════════════════════════════ -->
+<div class="flow" style="--flow-color:var(--c-flow-1)" id="f1">
+  <div class="flow-bar" onclick="toggle('f1')">
+    <div class="flow-gutter">
+      <span class="flow-num">flow_01</span>
+      <span class="flow-name">ONBOARDING</span>
+      <span class="flow-toggle"><span class="chevron">▶</span> expand</span>
+    </div>
+    <div class="lane-cell">
+      <div class="cmt">// one-time setup</div>
+      <div class="fn">answers_assessment()</div>
+      <div class="fn">names_twin()</div>
+      <div class="fn">accepts_protocol()</div>
+    </div>
+    <div class="lane-cell">
+      <div class="ep">POST /auth/register</div>
+      <div class="ep">POST /assessment/prakriti</div>
+      <div class="ep">POST /twin/preferences</div>
+      <div class="ep">POST /protocols/activate</div>
+    </div>
+    <div class="lane-cell">
+      <div class="op">scoring_algorithm(responses[])</div>
+      <div class="op">generate_first_protocol()</div>
+      <div class="op">herb_safety_check(meds)</div>
+    </div>
+    <div class="lane-cell">
+      <div class="sql">INSERT user_constitution</div>
+      <div class="sql">INSERT user_current_state</div>
+      <div class="sql">INSERT user_twin_preferences</div>
+      <div class="sql">INSERT protocols {active}</div>
+    </div>
+  </div>
+  <div class="flow-detail">
+    <div class="detail-inner">
+      <div class="detail-gutter">
+        <span class="step-num">STEPS</span>
+        <span style="font-size:9px;line-height:1.8;color:var(--text3)">
+          1. register<br>
+          2. assess<br>
+          3. score<br>
+          4. twin setup<br>
+          5. healthkit<br>
+          6. deep chat<br>
+          7. protocol gen<br>
+          8. activate
+        </span>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">user</div>
+          <div class="step-code">signup(email, password)</div>
+          <div class="step-cmt">// or apple_sign_in()</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">answer(60_questions)</div>
+          <div class="step-detail">physical · mental · digestive<br>lifestyle · current_state</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">set_twin_prefs()</div>
+          <div class="step-cmt">// name, style, verbosity</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">authorize_healthkit()</div>
+          <div class="step-cmt">// optional, iOS only</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">deep_dive_chat()</div>
+          <div class="step-detail">symptoms · goals · lifestyle<br>via conversational Twin</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">review_protocol()</div>
+          <div class="step-code">→ accept()</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">api calls</div>
+          <div class="step-code">POST /auth/register</div>
+          <div class="step-result">← { userId, accessToken }</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">POST /assessment/prakriti</div>
+          <div class="step-detail">body: { responses[60], healthGoals[] }</div>
+          <div class="step-result">← { prakriti, percentages, dominantType }</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">POST /twin/preferences</div>
+          <div class="step-detail">body: { twinName, communicationStyle }</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">POST /wearables/connect</div>
+          <div class="step-detail">body: { deviceType: 'apple_health' }</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">WS chat:send</div>
+          <div class="step-detail">conversationType: 'onboarding'</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">POST /protocols/activate</div>
+          <div class="step-result">← { activeProtocol }</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">backend logic</div>
+          <div class="step-code">bcrypt.hash(password)</div>
+          <div class="step-code">issue_jwt_tokens()</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">scoring_algorithm()</div>
+          <div class="step-detail">weight physical (35%)<br>weight mental (30%)<br>weight digestive (35%)</div>
+          <div class="step-result">→ vata%, pitta%, kapha%</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">enqueue(wearable_initial_sync)</div>
+          <div class="step-cmt">// reads last 30d HealthKit</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">assemble_context()</div>
+          <div class="step-detail">prakriti + goals → Claude API<br>twin populates health_profile</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">generate_protocol()</div>
+          <div class="step-code">herb_safety_check(meds)</div>
+          <div class="step-code">schedule_reminders()</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">SET onboarding_complete = true</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">writes</div>
+          <div class="step-code">users</div>
+          <div class="step-cmt">// email, password_hash</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">user_constitution</div>
+          <div class="step-detail">vata_pct · pitta_pct · kapha_pct<br>assessment_responses (raw)</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">user_current_state</div>
+          <div class="step-detail">all_imbalances = 0<br>agni = sama · ama = none<br>ojas = 7</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">user_twin_preferences</div>
+          <div class="step-code">user_health_profile</div>
+          <div class="step-code">user_wearable_devices</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">protocols { status: active }</div>
+          <div class="step-code">protocol_versions { v1 }</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FLOW 02 — DAILY CHECK-IN
+═══════════════════════════════════════════════════════════ -->
+<div class="flow" style="--flow-color:var(--c-flow-2)" id="f2">
+  <div class="flow-bar" onclick="toggle('f2')">
+    <div class="flow-gutter">
+      <span class="flow-num">flow_02</span>
+      <span class="flow-name">DAILY_CHECKIN</span>
+      <span class="flow-toggle"><span class="chevron">▶</span> expand</span>
+    </div>
+    <div class="lane-cell">
+      <div class="cmt">// 5 quick answers</div>
+      <div class="fn">rates_energy(1-10)</div>
+      <div class="fn">rates_sleep(1-10)</div>
+      <div class="fn">reports_digestion()</div>
+      <div class="fn">reports_mood()</div>
+    </div>
+    <div class="lane-cell">
+      <div class="ep">POST /health/checkin</div>
+      <div class="cmt">// { energy, sleep,</div>
+      <div class="cmt">//   digestion, mood, symptoms }</div>
+    </div>
+    <div class="lane-cell">
+      <div class="op">vikriti_update_rules()</div>
+      <div class="op">enqueue(checkin_insight)</div>
+      <div class="op">check_alert_triggers()</div>
+    </div>
+    <div class="lane-cell">
+      <div class="sql">INSERT daily_checkins</div>
+      <div class="sql">UPDATE user_current_state</div>
+      <div class="cmt">// agni · imbalances · ojas</div>
+    </div>
+  </div>
+  <div class="flow-detail">
+    <div class="detail-inner">
+      <div class="detail-gutter">
+        <span class="step-num">RULES</span>
+        <span style="font-size:9px;line-height:1.8;color:var(--text3)">
+          digestion<br>→ agni_state<br><br>
+          mood<br>→ dosha delta<br><br>
+          energy<br>→ ojas delta
+        </span>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">input</div>
+          <div class="step-code">energy_level: 1–10</div>
+          <div class="step-code">sleep_quality: 1–10</div>
+          <div class="step-code">digestion_state:</div>
+          <div class="step-detail">good | variable | sluggish | burning</div>
+          <div class="step-code">mood:</div>
+          <div class="step-detail">calm | anxious | irritable | heavy | mixed</div>
+          <div class="step-code">symptoms: string[]</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">api</div>
+          <div class="step-code">POST /health/checkin</div>
+          <div class="step-result">← { insight, tip }</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">vikriti mapping</div>
+          <div class="step-code">digestion = burning</div>
+          <div class="step-result">→ agni = tikshna</div>
+          <div class="step-result">→ pitta_imbalance += 1</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">digestion = sluggish</div>
+          <div class="step-result">→ agni = manda</div>
+          <div class="step-result">→ kapha_imbalance += 1</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">digestion = variable</div>
+          <div class="step-result">→ agni = vishama</div>
+          <div class="step-result">→ vata_imbalance += 1</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">mood = anxious</div>
+          <div class="step-result">→ vata_imbalance += 1</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">mood = irritable</div>
+          <div class="step-result">→ pitta_imbalance += 1</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">energy ≤ 3</div>
+          <div class="step-result">→ ojas_level -= 1</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">same_signal × 3 days</div>
+          <div class="step-warn">→ enqueue(prediction_alert)</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">writes</div>
+          <div class="step-code">daily_checkins</div>
+          <div class="step-cmt">// TimescaleDB hypertable</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">user_current_state</div>
+          <div class="step-detail">agni_state<br>±vata/pitta/kapha_imbalance<br>±ojas_level<br>last_updated_by = 'checkin'</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">messages</div>
+          <div class="step-cmt">// AI insight via Haiku (async)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FLOW 03 — ONE-OFF CHAT QUERY
+═══════════════════════════════════════════════════════════ -->
+<div class="flow" style="--flow-color:var(--c-flow-3)" id="f3">
+  <div class="flow-bar" onclick="toggle('f3')">
+    <div class="flow-gutter">
+      <span class="flow-num">flow_03</span>
+      <span class="flow-name">CHAT_QUERY</span>
+      <span class="flow-toggle"><span class="chevron">▶</span> expand</span>
+    </div>
+    <div class="lane-cell">
+      <div class="cmt">// any ad-hoc message</div>
+      <div class="fn">sends_message(text)</div>
+      <div class="fn">receives_stream()</div>
+    </div>
+    <div class="lane-cell">
+      <div class="ep">WS chat:send</div>
+      <div class="ep">← WS chat:chunk (stream)</div>
+      <div class="ep">← WS chat:complete</div>
+    </div>
+    <div class="lane-cell">
+      <div class="op">assemble_context()</div>
+      <div class="op">claude_stream(tools[])</div>
+      <div class="op">tool_executor()</div>
+    </div>
+    <div class="lane-cell">
+      <div class="sql">INSERT messages</div>
+      <div class="sql">UPDATE conversations</div>
+      <div class="sql">INCR usage_counters</div>
+    </div>
+  </div>
+  <div class="flow-detail">
+    <div class="detail-inner">
+      <div class="detail-gutter">
+        <span class="step-num">CTX</span>
+        <span style="font-size:9px;line-height:1.8;color:var(--text3)">
+          priority:<br>
+          1. prakriti<br>
+          2. vikriti<br>
+          3. protocol<br>
+          4. recent<br>
+          &nbsp;&nbsp;&nbsp;checkins<br>
+          5. history<br><br>
+          Free: 5 msgs<br>
+          Personal: 10<br>
+          Premium: 20
+        </span>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">user sends</div>
+          <div class="step-code">any health question</div>
+          <div class="step-cmt">// "why am I tired?"</div>
+          <div class="step-cmt">// "analyze my tongue scan"</div>
+          <div class="step-cmt">// "create a sleep protocol"</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">user receives</div>
+          <div class="step-code">streamed response</div>
+          <div class="step-detail">text | protocol_card<br>summary_card | visualization</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">websocket</div>
+          <div class="step-code">emit('chat:send')</div>
+          <div class="step-detail">{ conversationId?, content,<br>&nbsp;&nbsp;attachments? }</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">on('chat:chunk')</div>
+          <div class="step-cmt">// streams partial text</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">on('chat:complete')</div>
+          <div class="step-detail">{ messageId, tokensUsed }</div>
+        </div>
+        <div class="step active">
+          <div class="step-warn">on('chat:error')</div>
+          <div class="step-detail">USAGE_LIMIT → upgradeUrl<br>AI_UNAVAILABLE → queue</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">context assembly</div>
+          <div class="step-code">user_constitution ← static</div>
+          <div class="step-code">user_current_state ← live</div>
+          <div class="step-code">active_protocol.summary</div>
+          <div class="step-code">last_N_checkins (7 days)</div>
+          <div class="step-code">conversation_history</div>
+          <div class="step-code">date + season + time_of_day</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">claude api</div>
+          <div class="step-code">model: claude-sonnet-4-5</div>
+          <div class="step-code">stream: true</div>
+          <div class="step-code">tools: AYUAWARE_TOOLS[10]</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">if tool called</div>
+          <div class="step-code">tool_executor.run()</div>
+          <div class="step-cmt">// pause stream</div>
+          <div class="step-code">return tool_result</div>
+          <div class="step-cmt">// resume stream</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">writes</div>
+          <div class="step-code">conversations</div>
+          <div class="step-cmt">// created if new</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">messages × 2</div>
+          <div class="step-detail">user message + twin response<br>model_used · tokens_used<br>tools_called[]</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">usage_counters</div>
+          <div class="step-detail">INCR ai_messages<br>for billing period</div>
+        </div>
+        <div class="step active">
+          <div class="step-cmt">// if tool created protocol:</div>
+          <div class="step-code">protocols</div>
+          <div class="step-code">protocol_versions</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FLOW 04 — WEARABLE SYNC
+═══════════════════════════════════════════════════════════ -->
+<div class="flow" style="--flow-color:var(--c-flow-4)" id="f4">
+  <div class="flow-bar" onclick="toggle('f4')">
+    <div class="flow-gutter">
+      <span class="flow-num">flow_04</span>
+      <span class="flow-name">WEARABLE_SYNC</span>
+      <span class="flow-toggle"><span class="chevron">▶</span> expand</span>
+    </div>
+    <div class="lane-cell">
+      <div class="cmt">// background, passive</div>
+      <div class="fn">wears_device()</div>
+      <div class="fn">authorizes_healthkit()</div>
+      <div class="cmt">// no active input needed</div>
+    </div>
+    <div class="lane-cell">
+      <div class="cmt">// iOS background fetch</div>
+      <div class="ep">HealthKit.query(since_last)</div>
+      <div class="ep">POST /wearables/sync</div>
+      <div class="cmt">// hourly when app active</div>
+    </div>
+    <div class="lane-cell">
+      <div class="op">interpret_ayurveda()</div>
+      <div class="op">update_vikriti_if_sig()</div>
+      <div class="op">check_alert_triggers()</div>
+    </div>
+    <div class="lane-cell">
+      <div class="sql">BATCH INSERT wearable_data_points</div>
+      <div class="sql">UPDATE user_current_state</div>
+      <div class="cmt">// TimescaleDB</div>
+    </div>
+  </div>
+  <div class="flow-detail">
+    <div class="detail-inner">
+      <div class="detail-gutter">
+        <span class="step-num">SIGNALS</span>
+        <span style="font-size:9px;line-height:1.8;color:var(--text3)">
+          sleep &lt; 6h<br>→ vata<br><br>
+          wake 10pm–2am<br>→ pitta<br><br>
+          sleep &gt; 9h<br>→ kapha<br><br>
+          hrv &lt; 30ms<br>→ ojas low<br><br>
+          hrv drop 20%<br>→ alert
+        </span>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">healthkit reads</div>
+          <div class="step-code">SleepAnalysis</div>
+          <div class="step-code">HeartRateVariabilitySDNN</div>
+          <div class="step-code">HeartRate</div>
+          <div class="step-code">StepCount</div>
+          <div class="step-code">ActiveEnergyBurned</div>
+          <div class="step-code">BodyTemperature</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">sync strategy</div>
+          <div class="step-code">foreground: last 24h on open</div>
+          <div class="step-code">background: last 1h (hourly)</div>
+          <div class="step-code">initial: last 30 days</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">POST /wearables/sync</div>
+          <div class="step-detail">body: { deviceType,<br>&nbsp;&nbsp;dataPoints[200 max] }</div>
+          <div class="step-result">← { synced, skipped }</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">interpretation</div>
+          <div class="step-code">fragmented sleep (&gt;3 wake)</div>
+          <div class="step-result">→ vata_signal</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">wake 10pm–2am window</div>
+          <div class="step-result">→ pitta_signal</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">hrv 7d_avg &lt; 30ms</div>
+          <div class="step-result">→ ojas_concern_flag</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">hrv declining &gt; 20% over 3d</div>
+          <div class="step-warn">→ enqueue(prediction_alert)</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">consistent 3d signal</div>
+          <div class="step-code">→ UPDATE user_current_state</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">writes</div>
+          <div class="step-code">wearable_data_points</div>
+          <div class="step-cmt">// TimescaleDB hypertable</div>
+          <div class="step-detail">device_type · data_type<br>raw_values · dosha_signal</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">user_current_state</div>
+          <div class="step-cmt">// if signal consistent 3+ days</div>
+          <div class="step-detail">last_updated_by = 'wearable'</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">user_wearable_devices</div>
+          <div class="step-detail">SET last_synced_at = NOW()</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">notifications</div>
+          <div class="step-cmt">// if alert triggered</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FLOW 05 — LAB UPLOAD
+═══════════════════════════════════════════════════════════ -->
+<div class="flow" style="--flow-color:var(--c-flow-5)" id="f5">
+  <div class="flow-bar" onclick="toggle('f5')">
+    <div class="flow-gutter">
+      <span class="flow-num">flow_05</span>
+      <span class="flow-name">LAB_UPLOAD</span>
+      <span class="flow-toggle"><span class="chevron">▶</span> expand</span>
+    </div>
+    <div class="lane-cell">
+      <div class="cmt">// Premium tier only</div>
+      <div class="fn">uploads_lab_pdf()</div>
+      <div class="fn">awaits_notification()</div>
+      <div class="fn">views_interpretation()</div>
+    </div>
+    <div class="lane-cell">
+      <div class="ep">POST /health/lab/presigned-url</div>
+      <div class="ep">PUT S3 (direct upload)</div>
+      <div class="ep">POST /health/lab/confirm</div>
+    </div>
+    <div class="lane-cell">
+      <div class="op">ocr_extract(pdf)</div>
+      <div class="op">biomarker_interpret()</div>
+      <div class="op">vikriti_reassess()</div>
+    </div>
+    <div class="lane-cell">
+      <div class="sql">S3 ← pdf file (encrypted)</div>
+      <div class="sql">INSERT lab_results {pending}</div>
+      <div class="sql">UPDATE lab_results {complete}</div>
+    </div>
+  </div>
+  <div class="flow-detail">
+    <div class="detail-inner">
+      <div class="detail-gutter">
+        <span class="step-num">ASYNC</span>
+        <span style="font-size:9px;line-height:1.8;color:var(--text3)">
+          OCR pipeline<br>runs in<br>BullMQ worker<br><br>
+          ~2–5 min<br>processing<br><br>
+          push notify<br>when ready
+        </span>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">upload</div>
+          <div class="step-code">select_pdf()</div>
+          <div class="step-detail">blood work · hormone panels<br>metabolic markers</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">receives</div>
+          <div class="step-code">push_notification()</div>
+          <div class="step-cmt">// "Your results are ready"</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">view_interpretation()</div>
+          <div class="step-detail">biomarkers · Ayurvedic lens<br>protocol suggestions</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">upload flow</div>
+          <div class="step-code">GET presigned_s3_url</div>
+          <div class="step-code">PUT file → S3 directly</div>
+          <div class="step-cmt">// bypasses server for large files</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">POST /health/lab/confirm</div>
+          <div class="step-detail">{ fileKey, testDate, labName }</div>
+          <div class="step-result">← { labId, status: 'processing' }</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">ocr pipeline</div>
+          <div class="step-code">download_pdf(s3_url)</div>
+          <div class="step-code">claude_vision.extract()</div>
+          <div class="step-result">→ biomarkers[], values, ranges</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">interpret each</div>
+          <div class="step-code">map → dhatu (tissue layer)</div>
+          <div class="step-code">map → dosha_correlation</div>
+          <div class="step-code">flag if out_of_range</div>
+          <div class="step-warn">medical_flag if critical</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">synthesize</div>
+          <div class="step-code">overall_pattern()</div>
+          <div class="step-code">root_cause_analysis()</div>
+          <div class="step-code">action_plan[]</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">vikriti_reassess()</div>
+          <div class="step-code">protocol_review_if_mismatch()</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">writes</div>
+          <div class="step-code">S3 ← encrypted_pdf</div>
+          <div class="step-code">lab_results { pending }</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">lab_results { complete }</div>
+          <div class="step-detail">biomarkers (JSONB)<br>overall_pattern<br>root_cause_analysis<br>medical_flags[]</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">user_current_state</div>
+          <div class="step-cmt">// if significant findings</div>
+          <div class="step-code">notifications</div>
+          <div class="step-cmt">// push when ready</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FLOW 06 — PROTOCOL CREATION
+═══════════════════════════════════════════════════════════ -->
+<div class="flow" style="--flow-color:var(--c-flow-6)" id="f6">
+  <div class="flow-bar" onclick="toggle('f6')">
+    <div class="flow-gutter">
+      <span class="flow-num">flow_06</span>
+      <span class="flow-name">PROTOCOL_CREATE</span>
+      <span class="flow-toggle"><span class="chevron">▶</span> expand</span>
+    </div>
+    <div class="lane-cell">
+      <div class="cmt">// via chat or direct</div>
+      <div class="fn">requests_protocol()</div>
+      <div class="fn">reviews_draft()</div>
+      <div class="fn">accepts()</div>
+    </div>
+    <div class="lane-cell">
+      <div class="ep">WS chat:send (tool trigger)</div>
+      <div class="ep">  — or —</div>
+      <div class="ep">POST /protocols/generate</div>
+      <div class="ep">POST /protocols/:id/activate</div>
+    </div>
+    <div class="lane-cell">
+      <div class="op">assemble_full_context()</div>
+      <div class="op">claude_generate_protocol()</div>
+      <div class="op">herb_safety_check()</div>
+    </div>
+    <div class="lane-cell">
+      <div class="sql">INSERT protocols {draft}</div>
+      <div class="sql">INSERT protocol_versions {v1}</div>
+      <div class="sql">UPDATE protocols {active}</div>
+    </div>
+  </div>
+  <div class="flow-detail">
+    <div class="detail-inner">
+      <div class="detail-gutter">
+        <span class="step-num">TRIGGERS</span>
+        <span style="font-size:9px;line-height:1.8;color:var(--text3)">
+          1. end of<br>&nbsp;&nbsp;onboarding<br><br>
+          2. user chat<br>&nbsp;&nbsp;"create a<br>&nbsp;&nbsp;protocol"<br><br>
+          3. direct UI<br>&nbsp;&nbsp;action
+        </span>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">request</div>
+          <div class="step-code">describe_concern(text)</div>
+          <div class="step-cmt">// "I need help with sleep"</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">review</div>
+          <div class="step-code">reads_protocol_draft()</div>
+          <div class="step-detail">name · phases · recommendations<br>rationale · success_metrics</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">accept() | modify() | reject()</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">via chat</div>
+          <div class="step-code">Claude calls create_protocol()</div>
+          <div class="step-cmt">// tool interrupts stream</div>
+          <div class="step-cmt">// result returned to Claude</div>
+          <div class="step-result">← protocol_card in chat</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">direct</div>
+          <div class="step-code">POST /protocols/generate</div>
+          <div class="step-detail">{ concern, duration, intensity }</div>
+          <div class="step-result">← { protocol_draft }</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">POST /protocols/:id/activate</div>
+          <div class="step-result">← { activeProtocol }</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">context sent to claude</div>
+          <div class="step-code">prakriti + vikriti (full)</div>
+          <div class="step-code">active_symptoms</div>
+          <div class="step-code">health_goals</div>
+          <div class="step-code">lifestyle_constraints</div>
+          <div class="step-code">current_season</div>
+          <div class="step-code">existing_protocols (conflicts)</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">claude generates</div>
+          <div class="step-code">3 phases:</div>
+          <div class="step-detail">Foundation → Building → Maintenance</div>
+          <div class="step-code">5 categories:</div>
+          <div class="step-detail">Dietary · Lifestyle · Herbs<br>Practices · Environmental</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">herb safety</div>
+          <div class="step-code">for each herb_recommendation:</div>
+          <div class="step-code">check(user.medications)</div>
+          <div class="step-code">check(user.conditions)</div>
+          <div class="step-warn">remove or flag unsafe</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">writes</div>
+          <div class="step-code">protocols</div>
+          <div class="step-detail">phases (JSONB)<br>recommendations (JSONB)<br>status = 'draft'</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">protocol_versions</div>
+          <div class="step-detail">version: 1<br>snapshot (full JSONB)</div>
+        </div>
+        <div class="step active">
+          <div class="step-cmt">// on activate:</div>
+          <div class="step-code">protocols.status = 'active'</div>
+          <div class="step-code">notifications (reminders)</div>
+        </div>
+        <div class="step active">
+          <div class="step-cmt">// Free tier: max 1 active</div>
+          <div class="step-code">existing → 'paused' if needed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FLOW 07 — PROTOCOL MODIFICATION
+═══════════════════════════════════════════════════════════ -->
+<div class="flow" style="--flow-color:var(--c-flow-7)" id="f7">
+  <div class="flow-bar" onclick="toggle('f7')">
+    <div class="flow-gutter">
+      <span class="flow-num">flow_07</span>
+      <span class="flow-name">PROTOCOL_MODIFY</span>
+      <span class="flow-toggle"><span class="chevron">▶</span> expand</span>
+    </div>
+    <div class="lane-cell">
+      <div class="cmt">// 4 possible triggers</div>
+      <div class="fn">says_too_hard()</div>
+      <div class="cmt">// or: new_data arrives</div>
+      <div class="cmt">// or: low adherence</div>
+      <div class="cmt">// or: season changes</div>
+    </div>
+    <div class="lane-cell">
+      <div class="ep">WS (Claude tool mid-chat)</div>
+      <div class="ep">  — or —</div>
+      <div class="ep">PUT /protocols/:id/modify</div>
+    </div>
+    <div class="lane-cell">
+      <div class="op">snapshot_current_version()</div>
+      <div class="op">apply_modification()</div>
+      <div class="op">notify_user()</div>
+    </div>
+    <div class="lane-cell">
+      <div class="sql">INSERT protocol_versions {vN}</div>
+      <div class="sql">UPDATE protocols (JSONB patch)</div>
+      <div class="sql">INSERT notifications</div>
+    </div>
+  </div>
+  <div class="flow-detail">
+    <div class="detail-inner">
+      <div class="detail-gutter">
+        <span class="step-num">TRIGGERS</span>
+        <span style="font-size:9px;line-height:1.8;color:var(--text3)">
+          T1: chat<br>&nbsp;&nbsp;"this is<br>&nbsp;&nbsp;too hard"<br><br>
+          T2: new lab<br>&nbsp;&nbsp;changes<br>&nbsp;&nbsp;picture<br><br>
+          T3: adherence<br>&nbsp;&nbsp;&lt;40% for 5d<br><br>
+          T4: seasonal<br>&nbsp;&nbsp;change
+        </span>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">T1 – via chat</div>
+          <div class="step-code">"this herb is hard to find"</div>
+          <div class="step-code">"I can't do morning yoga"</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">T2 – new data</div>
+          <div class="step-code">lab_upload complete</div>
+          <div class="step-code">wearable_trend 3+ days</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">T3 – adherence</div>
+          <div class="step-code">nightly background job</div>
+          <div class="step-detail">user sees suggestion card<br>can accept or decline</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">T4 – seasonal</div>
+          <div class="step-code">quarterly scheduler</div>
+          <div class="step-detail">dietary + lifestyle adjustments</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">T1 path</div>
+          <div class="step-code">Claude calls modify_protocol()</div>
+          <div class="step-cmt">// tool mid-stream</div>
+          <div class="step-detail">{ protocolId, modifications[],<br>&nbsp;&nbsp;changeReason }</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">T2/T3/T4 path</div>
+          <div class="step-code">PUT /protocols/:id/modify</div>
+          <div class="step-detail">{ modifications[], changeReason }</div>
+          <div class="step-result">← { updatedProtocol, version }</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">all triggers same logic</div>
+          <div class="step-code">1. snapshot_current()</div>
+          <div class="step-cmt">// immutable audit trail</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">2. apply_patch(recommendations)</div>
+          <div class="step-cmt">// JSONB update</div>
+          <div class="step-code">3. version += 1</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">4. notify_or_confirm()</div>
+          <div class="step-cmt">// chat: Twin confirms in text</div>
+          <div class="step-cmt">// background: push notification</div>
+        </div>
+        <div class="step active">
+          <div class="step-label">T3 special</div>
+          <div class="step-code">if adherence &lt; 40% for 5d:</div>
+          <div class="step-code">→ generate_suggestions()</div>
+          <div class="step-code">→ INSERT notification</div>
+          <div class="step-cmt">// user decides, not auto-apply</div>
+        </div>
+      </div>
+      <div class="detail-lane">
+        <div class="step active">
+          <div class="step-label">writes (always)</div>
+          <div class="step-code">protocol_versions</div>
+          <div class="step-detail">version N snapshot (JSONB)<br>change_reason · changed_by</div>
+        </div>
+        <div class="step active">
+          <div class="step-code">protocols</div>
+          <div class="step-detail">recommendations patched<br>version incremented<br>updated_at = NOW()</div>
+        </div>
+        <div class="step active">
+          <div class="step-cmt">// depending on trigger:</div>
+          <div class="step-code">messages</div>
+          <div class="step-cmt">// chat confirmation</div>
+          <div class="step-code">notifications</div>
+          <div class="step-cmt">// push for T3/T4</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<div id="footer">
+  <div class="footer-item"><span class="dot" style="background:var(--c-user)"></span><span style="color:var(--c-user)">USER</span><span style="color:var(--text3)"> &nbsp;actions &amp; inputs</span></div>
+  <div class="footer-item"><span class="dot" style="background:var(--c-front)"></span><span style="color:var(--c-front)">FRONTEND</span><span style="color:var(--text3)"> &nbsp;iOS · React Native · HealthKit</span></div>
+  <div class="footer-item"><span class="dot" style="background:var(--c-backend)"></span><span style="color:var(--c-backend)">BACKEND</span><span style="color:var(--text3)"> &nbsp;NestJS API · BullMQ workers · Claude API</span></div>
+  <div class="footer-item"><span class="dot" style="background:var(--c-db)"></span><span style="color:var(--c-db)">DATABASE</span><span style="color:var(--text3)"> &nbsp;PostgreSQL · TimescaleDB · S3</span></div>
+  <div class="footer-item" style="margin-left:auto"><span style="color:var(--text3)">AyuAware // Backend Architecture Overview // Feb 2026</span></div>
+</div>
+
+<script>
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+// UI contract toggle
+document.querySelector('#ui-contract .uic-body') && (() => {
+  const hdr = document.querySelector('#ui-contract > div:first-child');
+  const body = document.querySelector('#ui-contract .uic-body');
+  const chev = document.getElementById('uic-chev');
+  hdr.addEventListener('click', () => {
+    const open = body.style.display === 'grid' || body.style.display === 'block';
+    body.style.display = open ? 'none' : 'block';
+    if (chev) chev.style.transform = open ? '' : 'rotate(90deg)';
+  });
+})();
+
+// keyboard: press number keys to open flows
+document.addEventListener('keydown', e => {
+  const map = {'1':'f1','2':'f2','3':'f3','4':'f4','5':'f5','6':'f6','7':'f7'};
+  if (map[e.key]) toggle(map[e.key]);
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.flow.open').forEach(f => f.classList.remove('open'));
+  }
+});
+</script>
+</body>
+</html>

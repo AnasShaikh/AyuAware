@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="AyuAware system architecture reference — machine-readable. Data models, backend flows, AI tool schemas, and response type contracts for AyuAware v1.0.">
+<meta name="robots" content="index, follow">
+<title>AyuAware — Agent Reference (Machine-Readable Architecture)</title>
+
+<!-- ── JSON-LD: page identity ── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "name": "AyuAware System Architecture — Agent Reference",
+  "description": "Machine-readable reference for AyuAware's backend flows, data models, AI integration, and response contracts.",
+  "version": "1.0",
+  "datePublished": "2026-02-22",
+  "keywords": ["AyuAware", "Ayurveda", "Digital Twin", "Prakriti", "Vikriti", "Claude API", "NestJS", "PostgreSQL"]
+}
+</script>
+
+<!-- ── Embedded machine-readable data ── -->
+
+<script type="application/json" id="ayuaware-data-model">
+{
+  "schema_version": "1.0",
+  "description": "AyuAware core data model — two layers per user",
+  "layers": {
+    "static": {
+      "name": "Prakriti",
+      "description": "Birth constitution — set once at onboarding, immutable for life. All personalisation is based on this baseline.",
+      "table": "user_constitution",
+      "set_at": "onboarding",
+      "is_mutable": false,
+      "fields": {
+        "vata_percentage": { "type": "integer", "range": "0-100", "note": "Vata dosha share of constitution. Fixed at assessment." },
+        "pitta_percentage": { "type": "integer", "range": "0-100" },
+        "kapha_percentage": { "type": "integer", "range": "0-100", "note": "Always: vata + pitta + kapha = 100" },
+        "dominant_type": { "type": "string", "examples": ["vata", "vata-pitta", "tridoshic"] },
+        "assessment_responses": { "type": "jsonb", "note": "Raw 60-question assessment answers, stored for auditability" },
+        "assessed_at": { "type": "timestamptz" }
+      }
+    },
+    "dynamic": {
+      "name": "Vikriti",
+      "description": "Current imbalance state — continuously updated by all data streams. Expressed as deltas from Prakriti baseline, NOT as absolute percentages.",
+      "table": "user_current_state",
+      "updated_by": ["daily_checkin", "wearable_sync", "lab_upload", "scan_analysis", "manual_log"],
+      "fields": {
+        "vata_imbalance": { "type": "integer", "range": "-10 to +10", "note": "Positive = excess Vata. 0 = in balance with Prakriti." },
+        "pitta_imbalance": { "type": "integer", "range": "-10 to +10" },
+        "kapha_imbalance": { "type": "integer", "range": "-10 to +10" },
+        "agni_state": { "type": "enum", "values": ["sama", "vishama", "tikshna", "manda"], "meaning": { "sama": "balanced digestion", "vishama": "irregular (Vata)", "tikshna": "sharp/burning (Pitta)", "manda": "slow/sluggish (Kapha)" } },
+        "ama_level": { "type": "enum", "values": ["none", "low", "moderate", "high"], "note": "Ama = accumulated toxins from poor digestion" },
+        "ojas_level": { "type": "integer", "range": "1-10", "note": "Vital essence / immunity indicator. High HRV + good sleep → higher ojas." },
+        "active_symptoms": { "type": "array<string>" },
+        "last_updated_by": { "type": "string", "examples": ["checkin", "wearable", "scan", "lab"] }
+      }
+    }
+  },
+  "time_series_tables": [
+    { "table": "daily_checkins", "engine": "TimescaleDB", "cadence": "user-triggered, typically daily" },
+    { "table": "wearable_data_points", "engine": "TimescaleDB", "cadence": "hourly background sync" }
+  ],
+  "document_tables": [
+    { "table": "lab_results", "storage": "PostgreSQL + S3", "cadence": "one-time upload" },
+    { "table": "scan_analyses", "storage": "PostgreSQL + S3", "cadence": "user-triggered" },
+    { "table": "genetic_profiles", "storage": "PostgreSQL + S3", "cadence": "one-time upload (V2)" }
+  ]
+}
+</script>
+
+<script type="application/json" id="ayuaware-flows">
+{
+  "schema_version": "1.0",
+  "flows": [
+    {
+      "id": "flow_01",
+      "name": "ONBOARDING",
+      "description": "One-time setup flow. Captures Prakriti (constitution) and stores it as the user's permanent baseline. Generates first protocol.",
+      "trigger": "New user taps 'Get Started'",
+      "trigger_type": "user_action",
+      "steps": [
+        { "step": 1, "actor": "user", "action": "Registers with email or Apple/Google Sign-In" },
+        { "step": 2, "actor": "user", "action": "Answers 60-question Prakriti assessment across 5 sections: physical build, physiological functions, mental/emotional, lifestyle, current state" },
+        { "step": 3, "actor": "backend", "action": "Scoring algorithm runs server-side: weighted multi-section scoring → vata%, pitta%, kapha% (must sum to 100)" },
+        { "step": 4, "actor": "backend", "action": "INSERT user_constitution with percentages and raw responses" },
+        { "step": 5, "actor": "backend", "action": "INSERT user_current_state with all imbalances = 0, agni = sama, ama = none, ojas = 7 (defaults)" },
+        { "step": 6, "actor": "user", "action": "Names Digital Twin, sets communication style preference (supportive_friend | wise_teacher | clinical_guide)" },
+        { "step": 7, "actor": "user", "action": "Optionally authorises Apple HealthKit (iOS)" },
+        { "step": 8, "actor": "backend", "action": "If HealthKit authorised: enqueue wearable_initial_sync job to read last 30 days of HealthKit data" },
+        { "step": 9, "actor": "ai_twin", "action": "Deep-dive onboarding conversation (conversation_type = 'onboarding'). Twin asks about symptoms, lifestyle, goals. Updates user_health_profile from conversation." },
+        { "step": 10, "actor": "backend", "action": "Generate first protocol via Claude API (create_protocol tool). Herb safety check runs against user medications." },
+        { "step": 11, "actor": "user", "action": "Reviews protocol draft and accepts it" },
+        { "step": 12, "actor": "backend", "action": "UPDATE protocols.status = 'active'. SET users.onboarding_complete = true." }
+      ],
+      "db_reads": ["users", "user_health_profile"],
+      "db_writes": ["users", "user_constitution", "user_current_state", "user_health_profile", "user_twin_preferences", "user_wearable_devices", "protocols", "protocol_versions"],
+      "ai_calls": [{ "model": "claude-sonnet-4-5", "purpose": "deep_dive_conversation + first_protocol_generation", "tools_used": ["create_protocol", "check_herb_safety", "log_manual_entry"] }]
+    },
+    {
+      "id": "flow_02",
+      "name": "DAILY_CHECKIN",
+      "description": "Primary mechanism for updating Vikriti. Quick 5-question form. Updates current state and generates async AI insight.",
+      "trigger": "User taps 'Check In' button",
+      "trigger_type": "user_action",
+      "steps": [
+        { "step": 1, "actor": "user", "action": "Submits 5 answers: energy_level (1-10), sleep_quality (1-10), digestion_state (good|variable|sluggish|burning), mood (calm|anxious|irritable|heavy|mixed), symptoms[]" },
+        { "step": 2, "actor": "backend", "action": "INSERT into daily_checkins (TimescaleDB)" },
+        { "step": 3, "actor": "backend", "action": "Apply Vikriti update rules (see vikriti_mapping)" },
+        { "step": 4, "actor": "backend", "action": "UPDATE user_current_state with new deltas and agni_state" },
+        { "step": 5, "actor": "backend", "action": "Enqueue checkin_insight job (async)" },
+        { "step": 6, "actor": "backend", "action": "Check alert triggers: if same dosha signal 3+ consecutive days → enqueue prediction_alert job" },
+        { "step": 7, "actor": "ai_twin", "action": "Haiku generates 2-3 sentence insight + 1 actionable tip (async, saved as message)" }
+      ],
+      "vikriti_mapping": [
+        { "input_field": "digestion_state", "input_value": "burning", "vikriti_effect": { "agni_state": "tikshna", "pitta_imbalance": "+1" } },
+        { "input_field": "digestion_state", "input_value": "sluggish", "vikriti_effect": { "agni_state": "manda", "kapha_imbalance": "+1" } },
+        { "input_field": "digestion_state", "input_value": "variable", "vikriti_effect": { "agni_state": "vishama", "vata_imbalance": "+1" } },
+        { "input_field": "digestion_state", "input_value": "good", "vikriti_effect": { "agni_state": "sama" } },
+        { "input_field": "mood", "input_value": "anxious", "vikriti_effect": { "vata_imbalance": "+1" } },
+        { "input_field": "mood", "input_value": "irritable", "vikriti_effect": { "pitta_imbalance": "+1" } },
+        { "input_field": "mood", "input_value": "heavy", "vikriti_effect": { "kapha_imbalance": "+1" } },
+        { "input_field": "energy_level", "input_value": "<=3", "vikriti_effect": { "ojas_level": "-1" } },
+        { "input_field": "energy_level", "input_value": ">=8", "vikriti_effect": { "ojas_level": "+0.5" } }
+      ],
+      "db_reads": ["user_current_state", "daily_checkins"],
+      "db_writes": ["daily_checkins", "user_current_state", "messages", "notifications"],
+      "ai_calls": [{ "model": "claude-haiku-3", "purpose": "checkin_insight_generation", "async": true }]
+    },
+    {
+      "id": "flow_03",
+      "name": "CHAT_QUERY",
+      "description": "Core product interaction. User sends a message → context assembled → Claude streams response → saved to DB.",
+      "trigger": "User sends a message in chat interface",
+      "trigger_type": "user_action",
+      "steps": [
+        { "step": 1, "actor": "backend", "action": "Auth check + usage limit check (Free: 20 msgs/month cap)" },
+        { "step": 2, "actor": "backend", "action": "Context assembly — see context_assembly_order" },
+        { "step": 3, "actor": "backend", "action": "Claude API call (Sonnet, stream: true, tools: AYUAWARE_TOOLS[10])" },
+        { "step": 4, "actor": "backend", "action": "For each stream event: content_block_delta (text) → forward to client via WebSocket (chat:chunk). content_block_start (tool_use) → PAUSE stream, execute tool, return tool_result to Claude, RESUME stream." },
+        { "step": 5, "actor": "backend", "action": "On message_stop: INSERT conversation (if new), INSERT user message, INSERT twin response with model_used/tokens_used/tools_called. INCREMENT usage_counters.ai_messages." }
+      ],
+      "context_assembly_order": [
+        { "priority": 1, "source": "user_constitution", "note": "Prakriti — always included, never trimmed" },
+        { "priority": 2, "source": "user_current_state", "note": "Vikriti — always included" },
+        { "priority": 3, "source": "active_protocol.summary", "note": "Current phase + today's recommendations" },
+        { "priority": 4, "source": "last_7_daily_checkins", "note": "7-day check-in summaries" },
+        { "priority": 5, "source": "conversation_history", "note": "Last N messages — trimmed first if over token budget" },
+        { "priority": 6, "source": "date_season_time", "note": "Current date, season, time of day, user timezone" }
+      ],
+      "token_budget_by_tier": {
+        "free": { "total": "~19k", "model": "claude-haiku-3", "history": "last 5 messages" },
+        "personal": { "total": "~25k", "model": "claude-sonnet-4-5", "history": "last 10 messages" },
+        "premium": { "total": "~33k", "model": "claude-sonnet-4-5", "history": "last 20 messages" }
+      },
+      "db_reads": ["user_constitution", "user_current_state", "protocols", "daily_checkins", "conversations", "messages", "usage_counters"],
+      "db_writes": ["conversations", "messages", "usage_counters"],
+      "ai_calls": [{ "model": "claude-sonnet-4-5", "purpose": "digital_twin_response", "stream": true, "tools_available": 10 }]
+    },
+    {
+      "id": "flow_04",
+      "name": "WEARABLE_SYNC",
+      "description": "Passive background flow. HealthKit data → Ayurvedic interpretation → Vikriti update → optional alert.",
+      "trigger": "iOS background fetch (hourly) or foreground app open",
+      "trigger_type": "background_job",
+      "steps": [
+        { "step": 1, "actor": "ios_app", "action": "Query HealthKit for SleepAnalysis, HRV, HeartRate, StepCount, ActiveEnergyBurned since last_synced_at" },
+        { "step": 2, "actor": "backend", "action": "BATCH INSERT wearable_data_points (TimescaleDB)" },
+        { "step": 3, "actor": "backend", "action": "Apply Ayurvedic interpretation rules — see wearable_interpretation_rules" },
+        { "step": 4, "actor": "backend", "action": "If signals consistent 3+ days: UPDATE user_current_state" },
+        { "step": 5, "actor": "backend", "action": "UPDATE user_wearable_devices.last_synced_at" },
+        { "step": 6, "actor": "backend", "action": "Check alert triggers: HRV declining >20% over 3 days → enqueue prediction_alert" }
+      ],
+      "wearable_interpretation_rules": [
+        { "metric": "sleep_duration", "condition": "<6 hours", "dosha_signal": "vata_aggravation", "vikriti_effect": "vata_imbalance +1" },
+        { "metric": "sleep_duration", "condition": ">9 hours", "dosha_signal": "kapha_excess", "vikriti_effect": "kapha_imbalance +1" },
+        { "metric": "sleep_onset_latency", "condition": ">30 minutes", "dosha_signal": "vata_imbalance" },
+        { "metric": "awakenings_count", "condition": ">3 per night", "dosha_signal": "vata_aggravation" },
+        { "metric": "waking_window", "condition": "10pm-2am", "dosha_signal": "pitta_aggravation" },
+        { "metric": "hrv_7day_avg", "condition": "<30ms", "dosha_signal": "ojas_concern", "vikriti_effect": "ojas_level -1" },
+        { "metric": "hrv_trend", "condition": "declining >20% over 3 days", "action": "trigger prediction_alert" }
+      ],
+      "db_reads": ["user_wearable_devices"],
+      "db_writes": ["wearable_data_points", "user_current_state", "user_wearable_devices", "notifications"],
+      "ai_calls": []
+    },
+    {
+      "id": "flow_05",
+      "name": "LAB_UPLOAD",
+      "description": "Premium feature. PDF lab results → OCR extraction → biomarker interpretation → Vikriti update.",
+      "trigger": "User uploads a lab result PDF",
+      "trigger_type": "user_action",
+      "plan_gate": "premium",
+      "steps": [
+        { "step": 1, "actor": "backend", "action": "Issue presigned S3 URL" },
+        { "step": 2, "actor": "ios_app", "action": "Upload PDF directly to S3 via presigned URL" },
+        { "step": 3, "actor": "backend", "action": "INSERT lab_results { status: 'pending' }. Enqueue lab_ocr_processing job." },
+        { "step": 4, "actor": "background_worker", "action": "Download PDF from S3. Call Claude Vision to extract biomarker names, values, units, reference ranges." },
+        { "step": 5, "actor": "background_worker", "action": "For each biomarker: map to dhatu (tissue layer) + dosha correlation. Flag if outside reference range. Flag as medical_flag if critically abnormal." },
+        { "step": 6, "actor": "background_worker", "action": "Generate: overall_pattern, root_cause_analysis, action_plan[]" },
+        { "step": 7, "actor": "background_worker", "action": "UPDATE lab_results { status: 'complete', biomarkers, interpretations }. Send push notification. Reassess Vikriti." }
+      ],
+      "biomarker_dosha_mapping_examples": [
+        { "biomarker": "hemoglobin_low", "dhatu": "rakta", "dosha_signal": "pitta_vata" },
+        { "biomarker": "tsh_high", "dhatu": "meda", "dosha_signal": "kapha_excess" },
+        { "biomarker": "cortisol_am_low", "note": "adrenal fatigue, ojas depletion", "dosha_signal": "vata_pitta" },
+        { "biomarker": "crp_high", "note": "inflammation, ama high", "dosha_signal": "pitta_excess" },
+        { "biomarker": "vitamin_d_low", "dhatu": "asthi", "dosha_signal": "vata_kapha" }
+      ],
+      "db_reads": ["user_health_profile", "user_current_state"],
+      "db_writes": ["lab_results", "user_current_state", "notifications"],
+      "ai_calls": [{ "model": "claude-sonnet-4-5", "purpose": "ocr_and_biomarker_interpretation", "vision": true, "async": true }]
+    },
+    {
+      "id": "flow_06",
+      "name": "PROTOCOL_CREATE",
+      "description": "AI generates a structured 3-phase wellness plan. Triggered by user request in chat, onboarding completion, or direct action.",
+      "trigger": "User requests a protocol (via chat or direct UI)",
+      "trigger_type": "user_action_or_ai_tool",
+      "triggers_list": ["onboarding completion", "user chat message requesting protocol", "direct 'New Protocol' UI action"],
+      "steps": [
+        { "step": 1, "actor": "backend", "action": "Assemble protocol generation context: Prakriti + Vikriti + active symptoms + health goals + lifestyle constraints + current season + existing active protocols (to avoid conflicts)" },
+        { "step": 2, "actor": "ai_twin", "action": "Claude generates structured protocol: name, description, 3 phases (Foundation→Building→Maintenance), recommendations in 5 categories (Dietary/Lifestyle/Herbs/Practices/Environmental). Each recommendation includes: action, frequency, timing, rationale, tips, contraindications, alternatives." },
+        { "step": 3, "actor": "backend", "action": "Herb safety check: for each herb in recommendations, cross-reference user_health_profile.current_medications and medical_conditions. Remove or flag unsafe recommendations." },
+        { "step": 4, "actor": "backend", "action": "INSERT protocols { status: 'draft' }. INSERT protocol_versions { version: 1, full snapshot }." },
+        { "step": 5, "actor": "user", "action": "Reviews protocol card in chat. Taps Accept." },
+        { "step": 6, "actor": "backend", "action": "UPDATE protocols.status = 'active'. If Free/Personal plan and existing active protocol: set existing to 'paused'. Schedule daily reminder notifications." }
+      ],
+      "protocol_structure": {
+        "phases": ["Foundation", "Building", "Maintenance"],
+        "recommendation_categories": ["Dietary", "Lifestyle", "Herbs", "Practices", "Environmental"],
+        "each_recommendation_fields": ["id", "category", "phase", "action", "frequency", "timing", "rationale", "tips", "contraindications", "alternatives"]
+      },
+      "plan_limits": { "free": 1, "personal": 1, "premium": 3 },
+      "db_reads": ["user_constitution", "user_current_state", "user_health_profile", "protocols", "herbs"],
+      "db_writes": ["protocols", "protocol_versions", "notifications"],
+      "ai_calls": [{ "model": "claude-sonnet-4-5", "purpose": "protocol_generation", "tools_used": ["create_protocol", "check_herb_safety"], "max_tokens": 4096 }]
+    },
+    {
+      "id": "flow_07",
+      "name": "PROTOCOL_MODIFY",
+      "description": "Active protocol is adjusted. Triggered by conversation, new data, poor adherence, or seasonal change.",
+      "trigger": "Multiple triggers — see triggers_list",
+      "trigger_type": "multi_trigger",
+      "triggers_list": [
+        { "id": "T1", "trigger": "User says 'this recommendation is too hard' in chat", "mechanism": "Claude calls modify_protocol tool mid-conversation" },
+        { "id": "T2", "trigger": "New lab result or wearable trend conflicts with active protocol", "mechanism": "ProtocolService.reviewActiveProtocols() called after data ingestion" },
+        { "id": "T3", "trigger": "Adherence <40% for 5+ consecutive days", "mechanism": "Nightly background job generates suggestion notification; user decides" },
+        { "id": "T4", "trigger": "Seasonal change (quarterly)", "mechanism": "Scheduled job generates seasonal adjustment proposal" }
+      ],
+      "steps": [
+        { "step": 1, "actor": "backend", "action": "Snapshot current protocol state: INSERT protocol_versions { version: N, full snapshot, change_reason, changed_by }" },
+        { "step": 2, "actor": "backend", "action": "Apply modification: UPDATE protocols.recommendations (JSONB patch). INCREMENT protocols.version." },
+        { "step": 3, "actor": "backend", "action": "Notify user: via chat confirmation (T1) or push notification (T2/T3/T4)" }
+      ],
+      "important": "T3 (low adherence) generates a suggestion — user must explicitly accept. It does NOT auto-apply changes.",
+      "db_reads": ["protocols", "protocol_tracking"],
+      "db_writes": ["protocol_versions", "protocols", "messages", "notifications"],
+      "ai_calls": [{ "model": "claude-sonnet-4-5", "purpose": "modification_suggestion_and_confirmation", "tools_used": ["modify_protocol"] }]
+    }
+  ]
+}
+</script>
+
+<script type="application/json" id="ayuaware-ai-tools">
+{
+  "schema_version": "1.0",
+  "description": "The 10 tools available to Claude during chat. The backend decides which tools to expose based on user tier. Claude calls tools; the backend executes them.",
+  "tool_execution_model": "Claude calls tool → backend ToolExecutorService runs NestJS service method → result returned to Claude as tool_result → Claude continues response",
+  "tools": [
+    {
+      "name": "detect_emergency",
+      "category": "safety",
+      "description": "ALWAYS called first if message contains emergency keywords. Overrides all normal flow. Logs safety event.",
+      "emergency_keywords": ["chest pain", "difficulty breathing", "suicidal thoughts", "severe bleeding", "stroke symptoms", "loss of consciousness", "severe allergic reaction", "high fever with confusion"],
+      "response_template": "Immediate emergency services directive. No health advice provided.",
+      "input": { "emergencyType": "string", "userMessage": "string" },
+      "output": { "template": "string", "log_created": "boolean" }
+    },
+    {
+      "name": "check_herb_safety",
+      "category": "safety",
+      "description": "Checks if a herb is safe for this specific user. Reads user medications and conditions from DB. Herb properties come from Claude's training knowledge (not a pre-seeded DB). Always call before recommending any herb.",
+      "input": { "herbName": "string", "intendedUse": "string?" },
+      "output": { "is_safe": "boolean", "warnings": "string[]", "alternatives": "string[]" },
+      "db_reads": ["user_health_profile.current_medications", "user_health_profile.medical_conditions", "herbs (cache)"]
+    },
+    {
+      "name": "create_protocol",
+      "category": "protocol",
+      "description": "Generates and saves a new wellness protocol for the user.",
+      "input": { "primaryConcern": "string", "duration": "number (days)", "intensity": "gentle|moderate|intensive", "constraints": "string[]?" },
+      "output": { "protocol_id": "string", "protocol_object": "Protocol" },
+      "db_writes": ["protocols", "protocol_versions"]
+    },
+    {
+      "name": "modify_protocol",
+      "category": "protocol",
+      "description": "Adjusts an existing active protocol. Snapshots current version before modifying.",
+      "input": { "protocolId": "string", "modifications": "{ recommendationId, change, reason }[]", "changeReason": "string" },
+      "output": { "updatedProtocol": "Protocol", "newVersion": "number" },
+      "db_writes": ["protocol_versions", "protocols"]
+    },
+    {
+      "name": "get_active_protocols",
+      "category": "protocol",
+      "description": "Retrieves user's current active protocols including today's recommendations and adherence.",
+      "input": {},
+      "output": { "protocols": "Protocol[]" },
+      "db_reads": ["protocols", "protocol_tracking"]
+    },
+    {
+      "name": "log_checkin",
+      "category": "data",
+      "description": "Logs a daily check-in when user mentions their state during conversation (not via the form flow).",
+      "input": { "energyLevel": "1-10?", "sleepQuality": "1-10?", "digestionState": "string?", "mood": "string?", "symptoms": "string[]?" },
+      "output": { "checkinId": "string", "vikritUpdated": "boolean" },
+      "db_writes": ["daily_checkins", "user_current_state"]
+    },
+    {
+      "name": "log_manual_entry",
+      "category": "data",
+      "description": "Logs a health entry when user mentions it in conversation (e.g., 'I had ginger tea this morning', 'I did yoga').",
+      "input": { "logType": "meal|symptom|supplement|meditation|menstrual", "data": "object", "notes": "string?" },
+      "output": { "logId": "string" },
+      "db_writes": ["manual_logs"]
+    },
+    {
+      "name": "get_user_health_summary",
+      "category": "data",
+      "description": "Fetches a comprehensive current health summary. Call when user asks 'how am I doing?' or when context needs refreshing mid-conversation.",
+      "input": { "include_wearables": "boolean", "days_back": "number (default 7)" },
+      "output": { "prakriti": "object", "vikriti": "object", "checkin_trends": "object", "wearable_summary": "object?" },
+      "db_reads": ["user_constitution", "user_current_state", "daily_checkins", "wearable_data_points"]
+    },
+    {
+      "name": "lookup_herb",
+      "category": "knowledge",
+      "description": "Returns Ayurvedic properties of a herb. Checks herbs cache table first; if not found, Claude generates from training knowledge and the result is cached.",
+      "note": "Herb knowledge is AI-generated from Claude's training data, NOT from a pre-seeded practitioner-validated database. Treat as AI-generated until marked ai_generated=false in the herbs table.",
+      "input": { "herbName": "string" },
+      "output": { "rasa": "string[]", "virya": "string", "vipaka": "string", "dosha_effect": "object", "indications": "string[]", "contraindications": "string[]", "standard_dosage": "string" },
+      "db_reads": ["herbs"],
+      "db_writes": ["herbs (cache only if not found)"]
+    },
+    {
+      "name": "lookup_food",
+      "category": "knowledge",
+      "description": "Returns Ayurvedic properties of a food including six tastes and dosha effects. Same caching pattern as lookup_herb.",
+      "note": "Food knowledge is AI-generated from Claude's training data.",
+      "input": { "foodName": "string" },
+      "output": { "six_tastes": "object", "dosha_effect": "object", "agni_effect": "string", "ama_potential": "string", "combining_rules": "object" },
+      "db_reads": ["foods"],
+      "db_writes": ["foods (cache only if not found)"]
+    }
+  ]
+}
+</script>
+
+<script type="application/json" id="ayuaware-response-contracts">
+{
+  "schema_version": "1.0",
+  "description": "How Claude output maps to typed UI components. The backend determines message_type based on which tools were called — Claude does not set this directly.",
+  "determination_rule": "message_type is set by backend after stream completes, based on tools_called array",
+  "message_types": [
+    {
+      "type": "text",
+      "trigger": "No tool called",
+      "component": "TextBubble",
+      "structured_data": null,
+      "description": "Plain Ayurvedic guidance, Q&A, explanations. content field contains Claude's full prose."
+    },
+    {
+      "type": "protocol_card",
+      "trigger": "create_protocol or modify_protocol tool was called",
+      "component": "ProtocolCard",
+      "description": "Tappable card shown below Claude's prose explanation.",
+      "structured_data_schema": {
+        "protocol_id": "string",
+        "name": "string",
+        "description": "string",
+        "duration_days": "number",
+        "current_phase": "string",
+        "phase_number": "number",
+        "total_phases": "number",
+        "top_recommendations": "Recommendation[] (max 3 for card display)",
+        "adherence_pct": "number?",
+        "status": "draft|active|paused",
+        "cta": "activate|view|view_changes"
+      }
+    },
+    {
+      "type": "summary_card",
+      "trigger": "morning_summary job or log_checkin tool with result",
+      "component": "SummaryCard",
+      "description": "Structured data card for summaries and check-in results.",
+      "structured_data_schema": {
+        "card_type": "morning_summary|checkin_result|scan_result",
+        "title": "string",
+        "items": "SummaryItem[] (each: { label, value, trend?: up|down|stable, status?: good|warn|alert })",
+        "cta": "string?"
+      }
+    },
+    {
+      "type": "visualization",
+      "trigger": "get_user_health_summary called with chart_request flag",
+      "component": "ChartEmbed",
+      "description": "Embedded chart component for trends and balances.",
+      "structured_data_schema": {
+        "chart_type": "dosha_balance|trend_line|adherence_bar",
+        "title": "string",
+        "period": "7d|30d|90d?",
+        "data": {
+          "dosha_balance": "{ current: {v,p,k}, baseline: {v,p,k} }",
+          "trend_line": "{ points: [{date, value}], metric: string }",
+          "adherence_bar": "{ dates: string[], values: number[] }"
+        }
+      }
+    },
+    {
+      "type": "quick_action",
+      "trigger": "Context suggests user needs next-step guidance",
+      "component": "ActionRow",
+      "description": "Horizontally scrollable action buttons.",
+      "structured_data_schema": {
+        "actions": "{ label: string, action: string, params?: object }[]"
+      }
+    }
+  ],
+  "wire_format": {
+    "description": "Every message saved to DB and returned to frontend",
+    "fields": {
+      "id": "UUID",
+      "conversation_id": "UUID",
+      "sender": "twin",
+      "message_type": "text|protocol_card|summary_card|visualization|quick_action",
+      "content": "string — Claude's prose, always present, always rendered ABOVE any card",
+      "structured_data": "JSONB|null — type-specific schema above, drives UI component rendered BELOW content",
+      "model_used": "string",
+      "tokens_used": "number",
+      "tools_called": "string[]"
+    }
+  }
+}
+</script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --fg: #1a1a1a;
+    --fg2: #444;
+    --fg3: #888;
+    --bg: #fff;
+    --bg2: #f8f8f8;
+    --border: #e0e0e0;
+    --accent: #2a7a6a;
+    --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  }
+
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; color: var(--fg); background: var(--bg); max-width: 960px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* ── Navigation ── */
+  nav { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; margin-bottom: 36px; }
+  nav h2 { font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--fg3); margin-bottom: 8px; }
+  nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  nav a { color: var(--accent); text-decoration: none; font-size: 13px; }
+  nav a:hover { text-decoration: underline; }
+
+  /* ── Headings ── */
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  h2 { font-size: 16px; font-weight: 700; margin: 40px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); color: var(--accent); }
+  h3 { font-size: 14px; font-weight: 600; margin: 24px 0 8px; }
+  h4 { font-size: 13px; font-weight: 600; margin: 16px 0 4px; color: var(--fg2); }
+
+  /* ── Meta header ── */
+  header { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .meta { font-size: 12px; color: var(--fg3); margin-top: 4px; }
+  .meta span::before { content: ' · '; }
+  .meta span:first-child::before { content: none; }
+
+  /* ── Sections ── */
+  section { margin-bottom: 48px; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th { text-align: left; padding: 6px 10px; background: var(--bg2); border-bottom: 2px solid var(--border); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; color: var(--fg2); }
+  td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── Code / pre ── */
+  code { font-family: var(--mono); font-size: 12px; background: #f3f2ef; padding: 1px 5px; border-radius: 3px; color: #b83040; }
+  pre { background: #f8f8f6; border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 12px; line-height: 1.55; margin: 10px 0; }
+
+  /* ── Definition list ── */
+  dl { margin: 8px 0; }
+  dt { font-weight: 600; font-size: 13px; margin-top: 10px; }
+  dd { margin-left: 16px; font-size: 13px; color: var(--fg2); }
+
+  /* ── Steps ── */
+  ol.steps { padding-left: 20px; margin: 8px 0; }
+  ol.steps li { margin: 6px 0; font-size: 13px; }
+  ol.steps li .actor { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; margin-right: 6px; }
+  .actor-user { background: #fff3e0; color: #b06820; }
+  .actor-backend { background: #e3eeff; color: #2a5ab8; }
+  .actor-ai { background: #ede8ff; color: #5a3a9a; }
+  .actor-worker { background: #e8f5e9; color: #2a6a3a; }
+  .actor-ios { background: #fff8e1; color: #a06800; }
+
+  /* ── Tags / pills ── */
+  .tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--border); background: var(--bg2); color: var(--fg2); margin: 1px; }
+  .tag-warning { border-color: #e8a844; background: #fff8e8; color: #a06820; }
+  .tag-safe { border-color: #4a9b7a; background: #e8f5ef; color: #2a6a4a; }
+
+  /* ── Notice blocks ── */
+  .note { background: #f0f8ff; border-left: 3px solid #5a8ae8; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 13px; margin: 10px 0; }
+  .warning { background: #fff8e8; border-left: 3px solid #e8a844; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 13px; margin: 10px 0; }
+
+  /* ── JSON download link ── */
+  .json-link { display: inline-block; font-size: 11px; color: var(--fg3); text-decoration: none; border: 1px solid var(--border); padding: 2px 8px; border-radius: 3px; margin-left: 8px; font-family: var(--mono); }
+  .json-link:hover { color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 640px) {
+    body { padding: 20px 16px 60px; }
+    nav ul { flex-direction: column; }
+    table { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AyuAware — Agent Reference</h1>
+  <p style="color:var(--fg2);margin-top:4px;font-size:13px">Machine-readable system architecture. Structured for AI agents, LLMs, and programmatic consumers.</p>
+  <div class="meta">
+    <span>Version 1.0</span>
+    <span>Phase 1 Deliverable</span>
+    <span>February 2026</span>
+    <span>Embedded JSON: <a href="#" style="color:var(--accent)">data-model</a> · <a href="#" style="color:var(--accent)">flows</a> · <a href="#" style="color:var(--accent)">ai-tools</a> · <a href="#" style="color:var(--accent)">response-contracts</a></span>
+  </div>
+</header>
+
+<section id="machine-interface" style="background:#f0f8ff;border:2px solid #2a7a6a;border-radius:8px;padding:20px 24px;margin-bottom:32px;">
+<h2 style="margin-top:0;border:none;padding-bottom:0;margin-bottom:12px">Machine Interface</h2>
+<p style="margin-bottom:12px;font-size:13px"><strong>If you are an AI agent or automated parser:</strong> skip the human-readable HTML below and pull the structured JSON directly from the <code>&lt;head&gt;</code>. Each block is a complete, self-contained schema — no parsing of prose or tables required.</p>
+
+<table>
+  <thead><tr><th>ID</th><th>Content</th><th>How to access</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>ayuaware-data-model</code></td>
+      <td>Prakriti/Vikriti schemas, field types, update cadences, all table names</td>
+      <td><code>document.getElementById('ayuaware-data-model').textContent</code> → parse as JSON</td>
+    </tr>
+    <tr>
+      <td><code>ayuaware-flows</code></td>
+      <td>All 7 interaction flows — trigger, ordered steps with actors, db_reads, db_writes, ai_calls, domain-specific rule mappings</td>
+      <td><code>document.getElementById('ayuaware-flows').textContent</code> → parse as JSON</td>
+    </tr>
+    <tr>
+      <td><code>ayuaware-ai-tools</code></td>
+      <td>All 10 Claude tool definitions — name, category, description, input/output schemas, db reads/writes, caveats</td>
+      <td><code>document.getElementById('ayuaware-ai-tools').textContent</code> → parse as JSON</td>
+    </tr>
+    <tr>
+      <td><code>ayuaware-response-contracts</code></td>
+      <td>message_type determination rules, structured_data schemas per type, full wire format</td>
+      <td><code>document.getElementById('ayuaware-response-contracts').textContent</code> → parse as JSON</td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="margin-top:12px;margin-bottom:4px;font-size:12px;color:#444"><strong>Via HTTP (curl/fetch):</strong> fetch the page and extract content between <code>&lt;script type="application/json" id="[ID]"&gt;</code> and the closing <code>&lt;/script&gt;</code> tag. All four blocks are in the <code>&lt;head&gt;</code> section of the document.</p>
+<p style="margin-top:8px;margin-bottom:0;font-size:12px;color:#666"><strong>Note on HTML table extraction:</strong> If you are parsing this page as raw text rather than using the JSON blocks, be aware that markdown-derived table separator rows (<code>|---|---|---|</code>) do not appear in the rendered HTML — they become CSS styling. The JSON blocks above have no such ambiguity and are the recommended machine interface.</p>
+</section>
+
+<nav aria-label="Page sections">
+  <h2>Contents</h2>
+  <ul>
+    <li><a href="#data-model">1. Core Data Model</a></li>
+    <li><a href="#flows">2. Interaction Flows</a></li>
+    <li><a href="#flow-01">2a. Onboarding</a></li>
+    <li><a href="#flow-02">2b. Daily Check-In</a></li>
+    <li><a href="#flow-03">2c. Chat Query</a></li>
+    <li><a href="#flow-04">2d. Wearable Sync</a></li>
+    <li><a href="#flow-05">2e. Lab Upload</a></li>
+    <li><a href="#flow-06">2f. Protocol Create</a></li>
+    <li><a href="#flow-07">2g. Protocol Modify</a></li>
+    <li><a href="#ai-tools">3. AI Tool Definitions</a></li>
+    <li><a href="#response-contracts">4. Response Type Contracts</a></li>
+    <li><a href="#tech-stack">5. Technology Stack</a></li>
+  </ul>
+</nav>
+
+<div class="note">All structured data on this page is also embedded as <code>&lt;script type="application/json"&gt;</code> blocks in the document <code>&lt;head&gt;</code> with IDs: <code>ayuaware-data-model</code>, <code>ayuaware-flows</code>, <code>ayuaware-ai-tools</code>, <code>ayuaware-response-contracts</code>.</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<section id="data-model">
+<h2>1. Core Data Model</h2>
+
+<p>Every feature in AyuAware is built on two data layers per user. Understanding the distinction between them is prerequisite to understanding any flow.</p>
+
+<h3 id="prakriti">Static Layer — Prakriti (Constitution)</h3>
+<p><strong>Table:</strong> <code>user_constitution</code> &nbsp;|&nbsp; <strong>Set:</strong> once at onboarding &nbsp;|&nbsp; <strong>Mutable:</strong> no</p>
+<p>Prakriti is the user's birth constitution in Ayurvedic medicine. It is immutable — determined at conception and stable throughout life. It is the baseline against which all imbalances are measured.</p>
+
+<table>
+  <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>vata_percentage</code></td><td>integer 0–100</td><td>Vata dosha share. Fixed at assessment. vata+pitta+kapha always = 100.</td></tr>
+    <tr><td><code>pitta_percentage</code></td><td>integer 0–100</td><td></td></tr>
+    <tr><td><code>kapha_percentage</code></td><td>integer 0–100</td><td></td></tr>
+    <tr><td><code>dominant_type</code></td><td>string</td><td>e.g. "vata", "vata-pitta", "tridoshic"</td></tr>
+    <tr><td><code>assessment_responses</code></td><td>JSONB</td><td>Raw 60-question answers stored for re-scoring and auditability</td></tr>
+    <tr><td><code>assessed_at</code></td><td>timestamptz</td><td>Users may re-assess after 90 days</td></tr>
+  </tbody>
+</table>
+
+<h3 id="vikriti">Dynamic Layer — Vikriti (Current State)</h3>
+<p><strong>Table:</strong> <code>user_current_state</code> &nbsp;|&nbsp; <strong>Updated by:</strong> check-ins, wearable sync, lab upload, scan analysis, manual logs</p>
+<p>Vikriti represents the user's current imbalance state, expressed as <em>deltas from the Prakriti baseline</em> — not as absolute percentages. A vata_imbalance of +3 means Vata is currently aggravated by 3 units above that user's natural Vata constitution.</p>
+
+<div class="warning">Vikriti imbalances do NOT replace or overwrite Prakriti percentages. They are additive deltas. The AI always reads both: "Your constitution is 65% Vata (your nature), currently showing +3 Vata aggravation (your state right now)."</div>
+
+<table>
+  <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>vata_imbalance</code></td><td>integer -10 to +10</td><td>Positive = excess. 0 = balanced with Prakriti.</td></tr>
+    <tr><td><code>pitta_imbalance</code></td><td>integer -10 to +10</td><td></td></tr>
+    <tr><td><code>kapha_imbalance</code></td><td>integer -10 to +10</td><td></td></tr>
+    <tr><td><code>agni_state</code></td><td>enum</td><td>sama (balanced) | vishama (irregular/Vata) | tikshna (sharp/Pitta) | manda (slow/Kapha)</td></tr>
+    <tr><td><code>ama_level</code></td><td>enum</td><td>none | low | moderate | high. Ama = accumulated toxins from impaired digestion.</td></tr>
+    <tr><td><code>ojas_level</code></td><td>integer 1–10</td><td>Vital essence / immunity indicator. Informed by HRV trends, sleep quality, stress signals.</td></tr>
+    <tr><td><code>active_symptoms</code></td><td>string[]</td><td></td></tr>
+    <tr><td><code>last_updated_by</code></td><td>string</td><td>checkin | wearable | scan | lab | manual</td></tr>
+  </tbody>
+</table>
+
+<h3>Data Streams that Update Vikriti</h3>
+<table>
+  <thead><tr><th>Stream</th><th>Table</th><th>Engine</th><th>Cadence</th></tr></thead>
+  <tbody>
+    <tr><td>Daily check-ins</td><td><code>daily_checkins</code></td><td>TimescaleDB hypertable</td><td>User-triggered</td></tr>
+    <tr><td>Wearable data</td><td><code>wearable_data_points</code></td><td>TimescaleDB hypertable</td><td>Hourly background sync</td></tr>
+    <tr><td>Lab results</td><td><code>lab_results</code></td><td>PostgreSQL + S3</td><td>One-time upload</td></tr>
+    <tr><td>Visual scans</td><td><code>scan_analyses</code></td><td>PostgreSQL + S3</td><td>User-triggered</td></tr>
+    <tr><td>Manual logs</td><td><code>manual_logs</code></td><td>PostgreSQL</td><td>User-triggered</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ══════════════════════════════════════════════ -->
+<section id="flows">
+<h2>2. Interaction Flows</h2>
+<p>Seven backend flows describe every way the system processes a user action or background event. Each flow specifies: trigger, ordered steps with actor labels, DB reads/writes, and AI calls.</p>
+</section>
+
+<!-- flow 01 -->
+<section id="flow-01" data-flow-id="flow_01" data-trigger-type="user_action">
+<h3>Flow 01 — Onboarding</h3>
+<p><strong>Purpose:</strong> Capture Prakriti and store it as the user's permanent constitutional baseline. Generate first protocol. <strong>Runs:</strong> once per user.</p>
+
+<ol class="steps">
+  <li><span class="actor actor-user">User</span> Registers (email / Apple Sign-In / Google)</li>
+  <li><span class="actor actor-user">User</span> Answers 60-question Prakriti assessment (5 sections: physical, physiological, mental/emotional, lifestyle, current state)</li>
+  <li><span class="actor actor-backend">Backend</span> Scoring algorithm runs server-side → <code>vata%</code>, <code>pitta%</code>, <code>kapha%</code> (always sum to 100)</li>
+  <li><span class="actor actor-backend">Backend</span> <code>INSERT user_constitution</code> with percentages and raw responses</li>
+  <li><span class="actor actor-backend">Backend</span> <code>INSERT user_current_state</code> with defaults: all imbalances = 0, agni = sama, ama = none, ojas = 7</li>
+  <li><span class="actor actor-user">User</span> Names Digital Twin, selects communication style</li>
+  <li><span class="actor actor-ios">iOS</span> (Optional) Authorises Apple HealthKit → backend enqueues <code>wearable_initial_sync</code> job (reads last 30 days)</li>
+  <li><span class="actor actor-ai">AI Twin</span> Deep-dive onboarding conversation (<code>conversation_type = 'onboarding'</code>) — populates <code>user_health_profile</code> from conversation</li>
+  <li><span class="actor actor-ai">AI Twin</span> Generates first protocol via <code>create_protocol</code> tool. Herb safety check against user medications runs automatically.</li>
+  <li><span class="actor actor-user">User</span> Reviews protocol draft and accepts</li>
+  <li><span class="actor actor-backend">Backend</span> <code>UPDATE protocols.status = 'active'</code>. <code>SET users.onboarding_complete = true</code>.</li>
+</ol>
+
+<dl>
+  <dt>DB reads</dt><dd>users, user_health_profile</dd>
+  <dt>DB writes</dt><dd>users, user_constitution, user_current_state, user_health_profile, user_twin_preferences, user_wearable_devices, protocols, protocol_versions</dd>
+  <dt>AI calls</dt><dd>claude-sonnet-4-5 — deep_dive_conversation + first_protocol_generation — tools: create_protocol, check_herb_safety, log_manual_entry</dd>
+</dl>
+</section>
+
+<!-- flow 02 -->
+<section id="flow-02" data-flow-id="flow_02" data-trigger-type="user_action">
+<h3>Flow 02 — Daily Check-In</h3>
+<p><strong>Purpose:</strong> Primary mechanism for updating Vikriti. 5-question form.</p>
+
+<ol class="steps">
+  <li><span class="actor actor-user">User</span> Submits: energy_level (1–10), sleep_quality (1–10), digestion_state, mood, symptoms[]</li>
+  <li><span class="actor actor-backend">Backend</span> <code>INSERT daily_checkins</code> (TimescaleDB)</li>
+  <li><span class="actor actor-backend">Backend</span> Apply Vikriti update rules (see table below)</li>
+  <li><span class="actor actor-backend">Backend</span> <code>UPDATE user_current_state</code> with new deltas</li>
+  <li><span class="actor actor-worker">Worker</span> Async: check alert triggers → if same signal 3+ days → enqueue prediction_alert</li>
+  <li><span class="actor actor-ai">AI (Haiku)</span> Async: generate 2–3 sentence insight + 1 tip → save as message</li>
+</ol>
+
+<h4>Vikriti Update Mapping</h4>
+<table>
+  <thead><tr><th>Field</th><th>Value</th><th>Vikriti Effect</th></tr></thead>
+  <tbody>
+    <tr><td>digestion_state</td><td>burning</td><td>agni = tikshna, pitta_imbalance +1</td></tr>
+    <tr><td>digestion_state</td><td>sluggish</td><td>agni = manda, kapha_imbalance +1</td></tr>
+    <tr><td>digestion_state</td><td>variable</td><td>agni = vishama, vata_imbalance +1</td></tr>
+    <tr><td>digestion_state</td><td>good</td><td>agni = sama</td></tr>
+    <tr><td>mood</td><td>anxious</td><td>vata_imbalance +1</td></tr>
+    <tr><td>mood</td><td>irritable</td><td>pitta_imbalance +1</td></tr>
+    <tr><td>mood</td><td>heavy</td><td>kapha_imbalance +1</td></tr>
+    <tr><td>energy_level</td><td>≤3</td><td>ojas_level −1</td></tr>
+    <tr><td>energy_level</td><td>≥8</td><td>ojas_level +0.5</td></tr>
+  </tbody>
+</table>
+
+<dl>
+  <dt>DB writes</dt><dd>daily_checkins, user_current_state, messages, notifications</dd>
+  <dt>AI calls</dt><dd>claude-haiku-3 (async) — checkin_insight_generation</dd>
+</dl>
+</section>
+
+<!-- flow 03 -->
+<section id="flow-03" data-flow-id="flow_03" data-trigger-type="user_action">
+<h3>Flow 03 — Chat Query</h3>
+<p><strong>Purpose:</strong> Core product interaction. User message → context assembled → Claude streams → saved.</p>
+<p><strong>Transport:</strong> WebSocket (Socket.io). Events: <code>chat:send</code> (client→server), <code>chat:chunk</code> (server→client, streaming), <code>chat:complete</code>, <code>chat:error</code>.</p>
+
+<ol class="steps">
+  <li><span class="actor actor-backend">Backend</span> Auth check + usage limit check (Free: 20 msgs/month)</li>
+  <li><span class="actor actor-backend">Backend</span> Context assembly — priority order: Prakriti → Vikriti → active protocol → last 7 check-ins → conversation history (trimmed first if over budget) → date/season</li>
+  <li><span class="actor actor-backend">Backend</span> Claude API call: model by tier, stream: true, tools: AYUAWARE_TOOLS[10]</li>
+  <li><span class="actor actor-backend">Backend</span> Stream loop: <code>content_block_delta</code> → forward chunk to client. <code>tool_use</code> → PAUSE forwarding, execute tool, return result to Claude, RESUME.</li>
+  <li><span class="actor actor-backend">Backend</span> On stream end: save conversation + both messages + metadata. INCREMENT usage_counters.</li>
+</ol>
+
+<h4>Token Budget by Tier</h4>
+<table>
+  <thead><tr><th>Tier</th><th>Model</th><th>Total Budget</th><th>History Window</th></tr></thead>
+  <tbody>
+    <tr><td>Free</td><td>claude-haiku-3</td><td>~19k tokens</td><td>Last 5 messages</td></tr>
+    <tr><td>Personal</td><td>claude-sonnet-4-5</td><td>~25k tokens</td><td>Last 10 messages</td></tr>
+    <tr><td>Premium</td><td>claude-sonnet-4-5</td><td>~33k tokens</td><td>Last 20 messages</td></tr>
+  </tbody>
+</table>
+
+<dl>
+  <dt>DB reads</dt><dd>user_constitution, user_current_state, protocols, daily_checkins, conversations, messages, usage_counters</dd>
+  <dt>DB writes</dt><dd>conversations, messages, usage_counters (+ any tool-triggered writes)</dd>
+  <dt>AI calls</dt><dd>claude-sonnet-4-5 — stream: true — 10 tools available</dd>
+</dl>
+</section>
+
+<!-- flow 04 -->
+<section id="flow-04" data-flow-id="flow_04" data-trigger-type="background_job">
+<h3>Flow 04 — Wearable Sync (Apple HealthKit)</h3>
+<p><strong>Purpose:</strong> Passive background flow. Device data → Ayurvedic interpretation → Vikriti update.</p>
+<p><strong>Sync cadence:</strong> foreground open → last 24h. Hourly background fetch → last 1h. Initial connect → last 30 days.</p>
+
+<ol class="steps">
+  <li><span class="actor actor-ios">iOS</span> Query HealthKit: SleepAnalysis, HRV, HeartRate, StepCount, ActiveEnergyBurned since last_synced_at</li>
+  <li><span class="actor actor-backend">Backend</span> BATCH INSERT wearable_data_points (TimescaleDB)</li>
+  <li><span class="actor actor-backend">Backend</span> Apply interpretation rules (see table)</li>
+  <li><span class="actor actor-backend">Backend</span> If signals consistent 3+ days: UPDATE user_current_state</li>
+  <li><span class="actor actor-backend">Backend</span> UPDATE user_wearable_devices.last_synced_at</li>
+  <li><span class="actor actor-worker">Worker</span> Check: HRV declining >20% over 3 days → enqueue prediction_alert</li>
+</ol>
+
+<h4>Wearable → Dosha Signal Mapping</h4>
+<table>
+  <thead><tr><th>Metric</th><th>Condition</th><th>Dosha Signal</th><th>Vikriti Effect</th></tr></thead>
+  <tbody>
+    <tr><td>sleep_duration</td><td>&lt;6 hours</td><td>Vata aggravation</td><td>vata_imbalance +1</td></tr>
+    <tr><td>sleep_duration</td><td>&gt;9 hours</td><td>Kapha excess</td><td>kapha_imbalance +1</td></tr>
+    <tr><td>sleep_onset_latency</td><td>&gt;30 min</td><td>Vata imbalance</td><td>—</td></tr>
+    <tr><td>awakenings_count</td><td>&gt;3/night</td><td>Vata aggravation</td><td>—</td></tr>
+    <tr><td>waking_window</td><td>10pm–2am</td><td>Pitta aggravation</td><td>pitta_imbalance +1</td></tr>
+    <tr><td>hrv_7day_avg</td><td>&lt;30ms</td><td>Ojas concern</td><td>ojas_level −1</td></tr>
+    <tr><td>hrv_trend</td><td>declining &gt;20% / 3 days</td><td>Alert trigger</td><td>prediction_alert enqueued</td></tr>
+  </tbody>
+</table>
+
+<dl>
+  <dt>DB writes</dt><dd>wearable_data_points, user_current_state, user_wearable_devices, notifications</dd>
+  <dt>AI calls</dt><dd>none (interpretation is rule-based, not AI)</dd>
+</dl>
+</section>
+
+<!-- flow 05 -->
+<section id="flow-05" data-flow-id="flow_05" data-trigger-type="user_action" data-plan-gate="premium">
+<h3>Flow 05 — Lab Upload <span class="tag tag-warning">Premium only</span></h3>
+<p><strong>Purpose:</strong> PDF lab results → OCR → biomarker extraction → Ayurvedic interpretation → Vikriti update.</p>
+
+<ol class="steps">
+  <li><span class="actor actor-backend">Backend</span> Issue presigned S3 URL</li>
+  <li><span class="actor actor-ios">iOS</span> Upload PDF directly to S3</li>
+  <li><span class="actor actor-backend">Backend</span> INSERT lab_results { status: 'pending' }. Enqueue lab_ocr_processing job.</li>
+  <li><span class="actor actor-worker">Worker</span> Download PDF. Call Claude Vision to extract all biomarkers (name, value, unit, reference range).</li>
+  <li><span class="actor actor-worker">Worker</span> Map each biomarker → dhatu (tissue layer) + dosha. Flag out-of-range values. Escalate critically abnormal as medical_flags.</li>
+  <li><span class="actor actor-worker">Worker</span> Generate overall_pattern, root_cause_analysis, action_plan[].</li>
+  <li><span class="actor actor-worker">Worker</span> UPDATE lab_results { status: 'complete' }. Send push notification. Reassess Vikriti.</li>
+</ol>
+
+<h4>Biomarker → Dosha Mapping (Examples)</h4>
+<table>
+  <thead><tr><th>Biomarker State</th><th>Dhatu</th><th>Dosha Signal</th></tr></thead>
+  <tbody>
+    <tr><td>Hemoglobin low</td><td>Rakta (blood)</td><td>Pitta/Vata</td></tr>
+    <tr><td>TSH high</td><td>Meda (fat)</td><td>Kapha excess</td></tr>
+    <tr><td>Cortisol AM low</td><td>—</td><td>Vata/Pitta (adrenal fatigue, Ojas depletion)</td></tr>
+    <tr><td>CRP high</td><td>—</td><td>Pitta excess, Ama elevated</td></tr>
+    <tr><td>Vitamin D low</td><td>Asthi (bone)</td><td>Vata/Kapha</td></tr>
+  </tbody>
+</table>
+
+<dl>
+  <dt>DB writes</dt><dd>lab_results, user_current_state, notifications</dd>
+  <dt>AI calls</dt><dd>claude-sonnet-4-5 — vision: true — ocr_and_biomarker_interpretation (async)</dd>
+</dl>
+</section>
+
+<!-- flow 06 -->
+<section id="flow-06" data-flow-id="flow_06" data-trigger-type="user_action_or_ai_tool">
+<h3>Flow 06 — Protocol Creation</h3>
+<p><strong>Purpose:</strong> AI generates a structured 3-phase wellness plan. Herb safety check is mandatory.</p>
+<p><strong>Triggers:</strong> onboarding completion | user chat message | direct UI action</p>
+
+<ol class="steps">
+  <li><span class="actor actor-backend">Backend</span> Assemble context: Prakriti + Vikriti + active symptoms + health goals + lifestyle constraints + current season + existing protocols</li>
+  <li><span class="actor actor-ai">AI (Sonnet)</span> Generate protocol: 3 phases (Foundation → Building → Maintenance), 5 categories (Dietary / Lifestyle / Herbs / Practices / Environmental). Each recommendation: action, frequency, timing, rationale, tips, contraindications, alternatives.</li>
+  <li><span class="actor actor-backend">Backend</span> Herb safety check: cross-reference all herb recommendations against user medications and conditions. Remove or flag unsafe items.</li>
+  <li><span class="actor actor-backend">Backend</span> INSERT protocols { status: 'draft' }. INSERT protocol_versions { v1 }.</li>
+  <li><span class="actor actor-user">User</span> Reviews protocol card. Accepts.</li>
+  <li><span class="actor actor-backend">Backend</span> UPDATE protocols.status = 'active'. Enforce plan limits (Free/Personal: max 1 active). Schedule reminders.</li>
+</ol>
+
+<dl>
+  <dt>Plan limits</dt><dd>Free: 1 active · Personal: 1 active · Premium: 3 active</dd>
+  <dt>DB writes</dt><dd>protocols, protocol_versions, notifications</dd>
+  <dt>AI calls</dt><dd>claude-sonnet-4-5 — max_tokens: 4096 — tools: create_protocol, check_herb_safety</dd>
+</dl>
+</section>
+
+<!-- flow 07 -->
+<section id="flow-07" data-flow-id="flow_07" data-trigger-type="multi_trigger">
+<h3>Flow 07 — Protocol Modification</h3>
+<p><strong>Purpose:</strong> Adjust an active protocol. Always snapshots before modifying (immutable version history).</p>
+
+<h4>Triggers</h4>
+<table>
+  <thead><tr><th>ID</th><th>Trigger</th><th>Mechanism</th><th>Auto-apply?</th></tr></thead>
+  <tbody>
+    <tr><td>T1</td><td>User says "this is too hard" in chat</td><td>Claude calls modify_protocol tool mid-conversation</td><td>Yes, after user sees confirmation in chat</td></tr>
+    <tr><td>T2</td><td>New lab result or wearable trend conflicts with protocol</td><td>ProtocolService.reviewActiveProtocols() post-ingestion</td><td>Generates suggestion; user decides</td></tr>
+    <tr><td>T3</td><td>Adherence &lt;40% for 5+ days</td><td>Nightly background job → notification</td><td>No — user must explicitly accept</td></tr>
+    <tr><td>T4</td><td>Seasonal change (quarterly)</td><td>Scheduled job → seasonal adjustment proposal</td><td>No — user must accept</td></tr>
+  </tbody>
+</table>
+
+<ol class="steps">
+  <li><span class="actor actor-backend">Backend</span> INSERT protocol_versions { version: N, full snapshot, change_reason, changed_by }</li>
+  <li><span class="actor actor-backend">Backend</span> UPDATE protocols.recommendations (JSONB patch). INCREMENT protocols.version.</li>
+  <li><span class="actor actor-backend">Backend</span> Notify: chat confirmation (T1) or push notification (T2/T3/T4)</li>
+</ol>
+
+<dl>
+  <dt>DB writes</dt><dd>protocol_versions, protocols, messages, notifications</dd>
+  <dt>AI calls</dt><dd>claude-sonnet-4-5 — tools: modify_protocol</dd>
+</dl>
+</section>
+
+<!-- ══════════════════════════════════════════════ -->
+<section id="ai-tools">
+<h2>3. AI Tool Definitions</h2>
+<p>10 tools are available to Claude during chat. The backend's <code>ToolExecutorService</code> executes each tool; Claude does not call external services directly.</p>
+<p><strong>Execution model:</strong> Claude emits <code>tool_use</code> block → backend pauses stream forwarding → executes NestJS service method → returns <code>tool_result</code> to Claude → stream resumes.</p>
+
+<div class="warning"><strong>Important:</strong> Herb and food knowledge (<code>lookup_herb</code>, <code>lookup_food</code>, <code>check_herb_safety</code>) is generated from Claude's training data, not from a pre-seeded practitioner-validated database. Results are cached in <code>herbs</code> / <code>foods</code> tables with <code>ai_generated = true</code> until reviewed by a qualified practitioner.</div>
+
+<table>
+  <thead><tr><th>Tool</th><th>Category</th><th>Purpose</th><th>DB Writes</th></tr></thead>
+  <tbody>
+    <tr><td><code>detect_emergency</code></td><td><span class="tag">safety</span></td><td>Called first if message contains emergency keywords. Overrides all normal flow. Returns emergency directive template.</td><td>audit_logs</td></tr>
+    <tr><td><code>check_herb_safety</code></td><td><span class="tag">safety</span></td><td>Reads user medications/conditions from DB. Generates safety assessment from Claude's herb knowledge. Always call before recommending a herb.</td><td>herbs (cache)</td></tr>
+    <tr><td><code>create_protocol</code></td><td><span class="tag">protocol</span></td><td>Generates and saves a new wellness protocol draft.</td><td>protocols, protocol_versions</td></tr>
+    <tr><td><code>modify_protocol</code></td><td><span class="tag">protocol</span></td><td>Adjusts an existing active protocol. Snapshots before modifying.</td><td>protocol_versions, protocols</td></tr>
+    <tr><td><code>get_active_protocols</code></td><td><span class="tag">protocol</span></td><td>Returns user's current active protocols with today's recommendations.</td><td>—</td></tr>
+    <tr><td><code>log_checkin</code></td><td><span class="tag">data</span></td><td>Logs a check-in when user mentions their state in conversation (not via form).</td><td>daily_checkins, user_current_state</td></tr>
+    <tr><td><code>log_manual_entry</code></td><td><span class="tag">data</span></td><td>Logs meals, symptoms, supplements, meditation etc. mentioned in conversation.</td><td>manual_logs</td></tr>
+    <tr><td><code>get_user_health_summary</code></td><td><span class="tag">data</span></td><td>Fetches comprehensive current health state for mid-conversation context refresh.</td><td>—</td></tr>
+    <tr><td><code>lookup_herb</code></td><td><span class="tag">knowledge</span></td><td>Returns rasa, virya, vipaka, dosha effects, dosage, contraindications. Cache-first, generates-and-caches if miss.</td><td>herbs (cache)</td></tr>
+    <tr><td><code>lookup_food</code></td><td><span class="tag">knowledge</span></td><td>Returns six tastes, dosha effects, agni impact, combining rules. Same cache pattern.</td><td>foods (cache)</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ══════════════════════════════════════════════ -->
+<section id="response-contracts">
+<h2>4. Response Type Contracts</h2>
+<p><strong>Rule:</strong> The backend determines <code>message_type</code> based on <code>tools_called[]</code> after the stream completes. Claude does not set message_type directly.</p>
+<p><strong>Rendering:</strong> <code>content</code> (Claude's prose) is always rendered above the component. <code>structured_data</code> drives the UI component below it.</p>
+
+<table>
+  <thead><tr><th>message_type</th><th>Trigger</th><th>Component</th><th>structured_data</th></tr></thead>
+  <tbody>
+    <tr><td><code>text</code></td><td>No tool called</td><td>TextBubble</td><td>null</td></tr>
+    <tr><td><code>protocol_card</code></td><td>create_protocol or modify_protocol called</td><td>ProtocolCard</td><td>{ protocol_id, name, duration_days, current_phase, top_recommendations[3], status, cta }</td></tr>
+    <tr><td><code>summary_card</code></td><td>morning_summary job or log_checkin result</td><td>SummaryCard</td><td>{ card_type, title, items[{ label, value, trend?, status? }], cta? }</td></tr>
+    <tr><td><code>visualization</code></td><td>get_user_health_summary with chart flag</td><td>ChartEmbed</td><td>{ chart_type, title, period?, data }</td></tr>
+    <tr><td><code>quick_action</code></td><td>Context suggests next steps</td><td>ActionRow</td><td>{ actions[{ label, action, params? }] }</td></tr>
+  </tbody>
+</table>
+
+<h3>Wire Format (messages table row)</h3>
+<pre>
+{
+  "id":             "UUID",
+  "conversation_id": "UUID",
+  "sender":         "twin",
+  "message_type":   "text | protocol_card | summary_card | visualization | quick_action",
+  "content":        "string  // Claude's prose — always present",
+  "structured_data": "JSONB | null  // type-specific schema above",
+  "model_used":     "claude-sonnet-4-5 | claude-haiku-3",
+  "tokens_used":    "number",
+  "tools_called":   "string[]"
+}
+</pre>
+</section>
+
+<!-- ══════════════════════════════════════════════ -->
+<section id="tech-stack">
+<h2>5. Technology Stack</h2>
+
+<table>
+  <thead><tr><th>Layer</th><th>Choice</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Mobile</td><td>React Native (TypeScript)</td><td>iOS-first. Expo managed workflow. Android via same codebase post-MVP.</td></tr>
+    <tr><td>Backend</td><td>Node.js + NestJS (TypeScript)</td><td>Modular architecture. Same language as mobile enables shared types.</td></tr>
+    <tr><td>Primary DB</td><td>PostgreSQL 15+</td><td>AWS RDS (HIPAA-eligible). JSONB for flexible metadata. Full-text search via pg_trgm.</td></tr>
+    <tr><td>Time-series</td><td>TimescaleDB extension</td><td>Runs on same RDS instance. Wearable + check-in data partitioned by time.</td></tr>
+    <tr><td>Cache / Queue</td><td>Redis (Upstash serverless for MVP)</td><td>Sessions, rate limiting, AI response cache (FAQ, 60s TTL), BullMQ job queue.</td></tr>
+    <tr><td>File storage</td><td>AWS S3 + KMS</td><td>Images, PDFs, genetic data. SSE-KMS encryption. Presigned URLs for client upload.</td></tr>
+    <tr><td>AI — primary</td><td>claude-sonnet-4-5</td><td>All core Digital Twin interactions. Protocol generation. Image analysis.</td></tr>
+    <tr><td>AI — fallback</td><td>claude-haiku-3</td><td>Free tier chat. Async check-in insights. High-load fallback for simple queries.</td></tr>
+    <tr><td>Real-time</td><td>WebSockets (Socket.io)</td><td>Chat streaming. Wearable sync notifications.</td></tr>
+    <tr><td>Background jobs</td><td>BullMQ (Redis-backed)</td><td>6 queues: wearable-sync, morning-summary, checkin-insight, prediction-scan, lab-ocr, protocol-adherence.</td></tr>
+    <tr><td>Payments (global)</td><td>Stripe (USD/EUR) + Razorpay (INR)</td><td>User locale detected at signup → routed to appropriate gateway.</td></tr>
+    <tr><td>MVP deployment</td><td>Railway.app or Fly.io</td><td>For 1–2 dev teams. Migrate to AWS ECS Fargate when MAU &gt; 5,000.</td></tr>
+    <tr><td>Compliance</td><td>HIPAA + GDPR + DPDP Act 2023</td><td>DPDP requires Indian user data in ap-south-1. BAAs: AWS, Anthropic, Stripe, Sentry.</td></tr>
+  </tbody>
+</table>
+</section>
+
+<footer style="margin-top:60px;padding-top:20px;border-top:1px solid var(--border);font-size:12px;color:var(--fg3)">
+  AyuAware — Agent Reference v1.0 &nbsp;·&nbsp; Phase 1 Deliverable &nbsp;·&nbsp; February 2026 &nbsp;·&nbsp;
+  Structured JSON available in &lt;head&gt;: <code>ayuaware-data-model</code>, <code>ayuaware-flows</code>, <code>ayuaware-ai-tools</code>, <code>ayuaware-response-contracts</code>
+</footer>
+
+</body>
+</html>
