@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flow Spec Sheet - UI X Backend Interactions</title>
+  <style>
+    body { margin:0; padding:24px; font-family: Inter, Arial, sans-serif; background:#faf7f1; color:#2f2a22; }
+    h1 { margin:0 0 10px; font-size:40px; }
+    .sub { margin:0 0 20px; color:#6d6558; }
+    section { margin:22px 0; border:1px solid #d8cbb2; background:white; border-radius:10px; overflow:hidden; }
+    h2 { margin:0; padding:12px 14px; background:#f3e7d3; border-bottom:1px solid #d8cbb2; font-size:20px; }
+    .table-wrap { overflow:auto; }
+    table { width:max-content; min-width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { border:1px solid #e4d7be; padding:8px 10px; vertical-align:top; text-align:left; white-space:pre-wrap; min-width:120px; }
+    th.head { background:#fff5e7; font-weight:700; position:sticky; top:0; z-index:1; }
+    .muted { padding:14px; color:#6d6558; }
+    a { color:#1f7f6e; }
+  </style>
+</head>
+<body>
+  <h1>Flow Spec Sheet - UI X Backend Interactions</h1>
+  <p class="sub">Rendered from <code>UI Backend Interactions - v2.xlsx</code> for bot readability.</p>
+  <section>
+<h2>1. Screen Flow Matrix v2</h2>
+<div class="table-wrap"><table>
+<tr>
+<th class="head">Screen Name</th>
+<th class="head">Figma Link</th>
+<th class="head">Read Data from DB</th>
+<th class="head">Write Data</th>
+<th class="head">Possible In Routes</th>
+<th class="head">Possible Out Routes</th>
+<th class="head">Interactions with AI / System Logic</th>
+</tr>
+<tr>
+<td>Onboarding</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3485-632&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>users, user_constitution (if resume), user_health_profile (if resume)</td>
+<td>users (onboarding_complete), user_constitution, user_current_state</td>
+<td>Sign Up / Login</td>
+<td>Today Screen</td>
+<td>Score Prakriti and initialize Vikriti baseline</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>assessment responses (local until submit)</td>
+<td>user_health_profile (goals, baseline constraints)</td>
+<td>&nbsp;</td>
+<td>Complete Prakriti Assessment</td>
+<td>Validate required onboarding steps before completion</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>user_twin_preferences</td>
+<td>user_twin_preferences</td>
+<td>&nbsp;</td>
+<td>Twin Personalization</td>
+<td>Capture communication style for future responses</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>wearable_data_points summary (if available)</td>
+<td>user_wearable_devices, wearable sync job enqueue</td>
+<td>&nbsp;</td>
+<td>Deep-dive Onboarding Chat</td>
+<td>If connected, inject wearable baseline into onboarding context</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>conversation history (onboarding type)</td>
+<td>conversation_messages (onboarding conversation)</td>
+<td>&nbsp;</td>
+<td>Protocol Preview</td>
+<td>Generate first protocol draft from onboarding context</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>protocols (draft-&gt;active), reminder metadata</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Activate first protocol and mark onboarding_complete=true</td>
+</tr>
+<tr>
+<td>Today Screen</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3796-3241&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>notifications (morning summary), user_current_state</td>
+<td>conversation_messages (quick chat), daily_checkins</td>
+<td>Login / Notification Tap</td>
+<td>Protocols/Projects</td>
+<td>Assemble summary cards from latest daily context</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>active protocol, protocol_tracking</td>
+<td>protocol_tracking (item completion)</td>
+<td>From Menu</td>
+<td>Check-in</td>
+<td>Update adherence score after each completed action</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>daily_checkins (recent), wearable_data_points (recent)</td>
+<td>daily_checkins (new)</td>
+<td>Chat redirect</td>
+<td>Chat</td>
+<td>Generate concise actionable insight and top priorities</td>
+</tr>
+<tr>
+<td>My Twin</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3533-529&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>user_constitution, user_current_state, twin preferences</td>
+<td>conversation_messages</td>
+<td>Menu / Chat redirect</td>
+<td>Constitution Detail</td>
+<td>Context assembly from constitution + current-state + recent interactions</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>recent daily checkins + wearable summaries</td>
+<td>protocol modification requests (if approved)</td>
+<td>&nbsp;</td>
+<td>Intelligence Evolution</td>
+<td>Generate evolution narrative from trend deltas</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>conversation history</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Patterns Discovered</td>
+<td>Surface patterns with confidence and short rationale</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Upcoming Predictions</td>
+<td>Run prediction logic and show early warnings</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>twin preferences</td>
+<td>twin preferences</td>
+<td>&nbsp;</td>
+<td>Customize Twin</td>
+<td>Persist style/verbosity updates and apply immediately</td>
+</tr>
+<tr>
+<td>Health</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3963-1101&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>insights/health, user_current_state, symptom trends</td>
+<td>health/manual-log (if submitted)</td>
+<td>Menu</td>
+<td>Pillars of Health</td>
+<td>Render health snapshot and trend interpretation</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>insights/wearables</td>
+<td>&nbsp;</td>
+<td>Chat redirect</td>
+<td>Dynamic Fluctuation / Metabolic Intensity detail</td>
+<td>Interpret sleep/HRV/activity in Ayurvedic context</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>constitution + current state</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Nutrition / Supplement / Lifestyle linked views</td>
+<td>Use same context block for cross-module health coherence</td>
+</tr>
+<tr>
+<td>Exposure</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3863-626&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>location, date/season, constitution, current state</td>
+<td>conversation_messages (if user gives feedback)</td>
+<td>Menu / Chat redirect</td>
+<td>Today Environmental Impact</td>
+<td>Generate environmental impact summary for current location</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>weather and light context</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Light Exposure</td>
+<td>Generate light recommendations (timing/intensity)</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>lunar context + profile</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Lunar Influence</td>
+<td>Generate lunar interpretation tied to current imbalance</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>astro inputs (when available)</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Astrology Influence</td>
+<td>Generate astrology narrative only when inputs are present</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>constitution + current state + day context</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Today Focus</td>
+<td>Produce one focused recommendation for the day</td>
+</tr>
+<tr>
+<td>Profile</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3599-749&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>users/me, user_health_profile, twin_preferences, subscriptions/current</td>
+<td>users/me, user_health_profile, twin_preferences</td>
+<td>Menu</td>
+<td>Sub-settings screens</td>
+<td>Primarily CRUD + validation; minimal generation</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>wearable devices</td>
+<td>wearables/connect/disconnect metadata</td>
+<td>&nbsp;</td>
+<td>Add Wearable Device</td>
+<td>Persist device connection state</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>notifications settings</td>
+<td>notifications settings + device token</td>
+<td>&nbsp;</td>
+<td>Notification Settings</td>
+<td>Save delivery preferences and token mapping</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>privacy settings</td>
+<td>privacy settings</td>
+<td>&nbsp;</td>
+<td>Privacy/Data Export</td>
+<td>Honor consent/permissions flags</td>
+</tr>
+<tr>
+<td>Nutrition</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3607-1729&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>insights/nutrition, meal logs, constitution</td>
+<td>meal logs, scan_analyses (meal)</td>
+<td>Menu / Chat redirect</td>
+<td>Log Meal</td>
+<td>Generate nutrition suggestions from six-taste and dosha balance</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>meal timing patterns + routine data</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Optimal Meal Timing</td>
+<td>Recommend timing based on trends and constitution</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>weekly nutrition aggregates</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Weekly Nutrition Analysis</td>
+<td>Summarize weekly nutrition pattern and gaps</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>constitution food mapping</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Constitutional Food Guide</td>
+<td>Show personalized food guidance card set</td>
+</tr>
+<tr>
+<td>Supplements</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3661-649&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>current supplements, interactions, adherence</td>
+<td>protocol update requests + adherence notes</td>
+<td>Menu / Chat redirect</td>
+<td>Supplement Schedule</td>
+<td>Safety-first interpretation and recommendation display</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>supplement outcomes and symptom links</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Effectiveness / Slack</td>
+<td>Assess effectiveness using recent logs and trends</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>interaction checks + contraindications</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Safety and Interaction Check</td>
+<td>Always run interaction guard before surfacing advice</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>herb knowledge cache</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Ayurvedic Herb Library</td>
+<td>Fetch from cache, generate only when not cached</td>
+</tr>
+<tr>
+<td>Lifestyle</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3681-750&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>routine logs, checkins, wearable trends</td>
+<td>routine/practice logs</td>
+<td>Menu / Chat redirect</td>
+<td>Daily Routine</td>
+<td>Generate routine adjustments from adherence + imbalance</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>session templates + user context</td>
+<td>session activity logs</td>
+<td>&nbsp;</td>
+<td>Start a Session</td>
+<td>Persist session outputs for trend analysis</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>analytics aggregates</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Analytics / Weekly Overview</td>
+<td>Render week-over-week lifestyle trends</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>season + location + constitution</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Ritucharya</td>
+<td>Generate seasonal adjustments for current context</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>practice history</td>
+<td>practice logs</td>
+<td>&nbsp;</td>
+<td>Practice</td>
+<td>Track and reinforce practice consistency</td>
+</tr>
+<tr>
+<td>Projects</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3685-1810&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>projects, linked protocols, milestones, progress</td>
+<td>projects create/update, milestones, linked protocol updates</td>
+<td>Menu / Chat redirect / Onboarding completion</td>
+<td>Active Projects</td>
+<td>Generate project recommendations from goals + health context</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>project-level adherence + outcomes</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Recommendations</td>
+<td>Update suggestions based on progress delta</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>new project record + milestones</td>
+<td>&nbsp;</td>
+<td>Create New Project</td>
+<td>Initialize project lifecycle state</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>individual project detail</td>
+<td>individual project updates</td>
+<td>&nbsp;</td>
+<td>Project Detail / Completion</td>
+<td>Assess completion and trigger next-step recommendations</td>
+</tr>
+</table></div>
+</section><section>
+<h2>2. Interaction Flows v2</h2>
+<div class="table-wrap"><table>
+<tr>
+<th class="head">&nbsp;</th>
+<th class="head">&nbsp;</th>
+<th class="head">&nbsp;</th>
+</tr>
+<tr>
+<td>Sign Up</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User Request</td>
+<td>UI Response</td>
+<td>Backend Operations</td>
+</tr>
+<tr>
+<td>User clicks Sign Up</td>
+<td>Sign up options screen opens (Google/Apple/Email)</td>
+<td>Route to signup screen</td>
+</tr>
+<tr>
+<td>User selects provider</td>
+<td>Provider-specific auth form opens</td>
+<td>Initiate provider auth flow and validate callback</td>
+</tr>
+<tr>
+<td>User completes signup</td>
+<td>User lands in onboarding start</td>
+<td>Create user, issue tokens, set onboarding_complete=false</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Login</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User clicks Login</td>
+<td>Login options screen opens</td>
+<td>Route to login screen</td>
+</tr>
+<tr>
+<td>User submits credentials/provider auth</td>
+<td>If onboarding incomplete -&gt; Onboarding; else -&gt; Today</td>
+<td>Validate session and route by onboarding_complete flag</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Onboarding</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User submits onboarding details</td>
+<td>Progresses to next onboarding step or missing-data prompt</td>
+<td>Score constitution, save profile/state, enforce required fields</td>
+</tr>
+<tr>
+<td>User connects wearable (optional in base PRD)</td>
+<td>Connection status shown</td>
+<td>Register wearable source and enqueue initial sync</td>
+</tr>
+<tr>
+<td>User completes onboarding chat</td>
+<td>Protocol preview shown</td>
+<td>Persist onboarding conversation and generate first protocol draft</td>
+</tr>
+<tr>
+<td>User accepts first protocol</td>
+<td>Redirect to Today screen</td>
+<td>Activate protocol and mark onboarding_complete=true</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Today</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User opens Today</td>
+<td>Morning summary + status + today actions rendered</td>
+<td>Fetch latest summary, current state, active protocol, today tracking state</td>
+</tr>
+<tr>
+<td>User marks an action complete</td>
+<td>Action tile updates immediately</td>
+<td>Upsert protocol_tracking and recalculate adherence</td>
+</tr>
+<tr>
+<td>User starts daily check-in</td>
+<td>Check-in modal and insight response shown</td>
+<td>Save check-in, update Vikriti, return quick insight</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>My Twin</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User opens My Twin</td>
+<td>Twin overview loads</td>
+<td>Fetch constitution/current state/preferences and recent context</td>
+</tr>
+<tr>
+<td>User navigates to Intelligence Evolution / Patterns / Predictions</td>
+<td>Corresponding card/slide renders</td>
+<td>Generate and cache card payloads from user context</td>
+</tr>
+<tr>
+<td>User customizes Twin style</td>
+<td>Updated Twin style reflected in UI</td>
+<td>Update twin preferences</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Health</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User opens Health screen</td>
+<td>Health dashboard cards render</td>
+<td>Fetch insights/health and state summaries</td>
+</tr>
+<tr>
+<td>User opens metric detail (sleep, HRV, pillars)</td>
+<td>Detail views and trends render</td>
+<td>Fetch insights/wearables and trend windows</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Exposure</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User opens Exposure</td>
+<td>Environmental impact card renders</td>
+<td>Resolve location/date + profile context, generate exposure guidance</td>
+</tr>
+<tr>
+<td>User browses Light/Lunar/Astrology/Focus cards</td>
+<td>Carousel cards render</td>
+<td>Load or generate card-specific interpretation payload</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Profile</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User opens Profile</td>
+<td>Profile sections render</td>
+<td>Fetch users/me + health profile + preferences + subscription summary</td>
+</tr>
+<tr>
+<td>User updates goals/preferences</td>
+<td>Saved confirmation state shown</td>
+<td>Validate and persist profile/preference updates</td>
+</tr>
+<tr>
+<td>User configures notifications</td>
+<td>Notification setting toggles persist</td>
+<td>Save device token/settings and update notification prefs</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Nutrition</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User opens Nutrition</td>
+<td>Nutrition overview and guidance render</td>
+<td>Fetch nutrition insights + meal log summary + constitution context</td>
+</tr>
+<tr>
+<td>User logs meal (manual/photo)</td>
+<td>Meal log entry appears</td>
+<td>Save meal log, trigger optional scan analysis, refresh nutrition summary</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Supplements</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User opens Supplements</td>
+<td>Schedule/effectiveness/safety cards render</td>
+<td>Fetch supplement recommendations and interaction checks</td>
+</tr>
+<tr>
+<td>User requests supplement change</td>
+<td>Updated recommendation shown</td>
+<td>Run safety check and save protocol modification if approved</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Lifestyle</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User opens Lifestyle</td>
+<td>Routine and analytics cards render</td>
+<td>Fetch lifestyle logs + check-in trends + wearable context</td>
+</tr>
+<tr>
+<td>User starts a guided session/practice log</td>
+<td>Session UI and completion state shown</td>
+<td>Store session/practice log and update adherence signals</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Projects</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>User opens Projects</td>
+<td>Project list and progress render</td>
+<td>Fetch projects and linked protocol progress</td>
+</tr>
+<tr>
+<td>User creates a new project</td>
+<td>New project detail page opens</td>
+<td>Create project record and initialize milestones</td>
+</tr>
+<tr>
+<td>User requests recommendations in project</td>
+<td>Recommendation block renders</td>
+<td>Generate recommendations from project goal + health context</td>
+</tr>
+</table></div>
+</section>
+</body>
+</html>

@@ -1,0 +1,1841 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AyuAware MVP Development PRD - Bot Version</title>
+  <style>
+body{margin:0;padding:20px;max-width:1100px;font-family:Arial,Helvetica,sans-serif;line-height:1.5;color:#111;background:#fff}
+a{color:#0645ad}
+h1,h2,h3{margin:16px 0 8px}
+p,li{margin:6px 0}
+img{max-width:100%;height:auto}
+.table{width:100%;border-collapse:collapse;font-size:14px}
+.table th,.table td{border:1px solid #ccc;padding:8px;vertical-align:top}
+.table th{text-align:left;background:#f4f4f4}
+section{margin-bottom:18px}
+.prompt-map-table{table-layout:auto;font-size:13px}
+.prompt-map-table th,.prompt-map-table td{white-space:normal;word-break:break-word;overflow-wrap:anywhere}
+.prompt-map-table th:nth-child(1), .prompt-map-table td:nth-child(1){width:28%}
+.prompt-map-table th:nth-child(2), .prompt-map-table td:nth-child(2){width:16%}
+.prompt-map-table th:nth-child(3), .prompt-map-table td:nth-child(3){width:24%}
+.prompt-map-table th:nth-child(4), .prompt-map-table td:nth-child(4){width:22%}
+.prompt-map-table th:nth-child(5), .prompt-map-table td:nth-child(5){width:10%}
+.roadmap-table{table-layout:auto}
+.roadmap-table th,.roadmap-table td{white-space:normal;word-break:normal;overflow-wrap:normal}
+</style>
+</head>
+<body>
+    <div>
+    <section>
+      <h1>🌿 AyuAware MVP Development PRD</h1>
+      <p style="margin-top:6px">Bot Version of this Page - <a href="./ayu-mvp-prd-bot.html">Open Bot Version</a></p>
+      <h2 style="margin:8px 0 10px;font-size:20px;color:#4d4233">Introduction</h2>
+      <p style="margin-top:10px">
+        This document will serve as the one source of truth for the development of AyuAware on iOS and Android.
+      </p>
+      <p style="margin-top:6px">It aligns product scope, architecture, data structures, and flow logic into one execution reference.</p>
+            <p style="margin-top:8px">Links to all current docs - <a href="./bot-docs/index.html">Open Docs Page</a></p>
+      <p style="margin-top:6px">
+        Figma master file - <a href="https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=343-293&p=f&t=dAUSEMsz0FTM1Cla-0" style="color:var(--a);font-weight:600">Open Figma</a>
+      </p>
+    </section>
+
+
+    
+    <details>
+      <summary>✅ MVP Scope Boundary (Based on Sections in Figma UI Design File) (click to expand)</summary>
+      <div>
+      <p>This section clearly defines what is committed for the MVP release versus what is intentionally deferred.</p>
+      <h3>Included in MVP</h3>
+      <ul>
+        <li>Login</li>
+        <li>Onboarding</li>
+        <li>Today</li>
+        <li>Health</li>
+        <li>NSL (Nutrition, Supplements, Lifestyle)</li>
+        <li>Projects</li>
+        <li>Profile Management</li>
+      </ul>
+      <h3>Deferred to Post-MVP</h3>
+      <ul>
+        <li>Practitioner (from Profile Section)</li>
+        <li>Shop</li>
+        <li>Learn</li>
+        <li>Advanced Intelligence Layer</li>
+      </ul>
+    </div>
+    </details>
+
+    <details>
+      <summary>⚙️ Tech Stack (click to expand)</summary>
+      <div>
+      <h3 style="margin:6px 0 10px">📱 Mobile App Stack (Frontend)</h3>
+      <p style="font-size: 16px; margin-bottom: 20px;">The technologies that will build the actual AyuAware app on the user's phone.</p>
+
+      <div class="tech-card">
+        <h3>⚛️ React Native (with TypeScript)</h3>
+        <div class="tech-role">Role in AyuAware: The core framework building the iOS (and later Android) application.</div>
+        <p>This is what actually renders the buttons, screens, and text on the phone. By choosing React Native, we write <b>one single codebase</b> that works natively on both iOS and Android.</p>
+        <p><b>Why for MVP:</b> It is highly "agent-friendly." Because it's one of the most popular frameworks in the world, AI coding assistants have massive amounts of training data on it, enabling the generation of reliable, bug-free UI code much faster than using pure Swift (iOS) or Kotlin (Android).</p>
+      </div>
+
+      <div class="tech-card">
+        <h3>🛠️ Expo</h3>
+        <div class="tech-role">Role in AyuAware: The build system and toolkit that makes React Native easy to manage.</div>
+        <p>Normally, building a mobile app requires fighting with Apple's Xcode or Android Studio. Expo handles all of that complex compiling in the cloud.</p>
+        <p><b>Why for MVP:</b> It allows us to preview the app instantly on physical phones via a QR code. More importantly, it allows for <b>Over-The-Air (OTA) updates</b>. If we find a bug in the protocol UI, we can push a fix directly to users' phones immediately, without waiting for Apple's App Store review process.</p>
+      </div>
+      <div></div>
+
+      <h3 style="margin:2px 0 10px">⚙️ Backend Stack & Infra (MVP)</h3>
+      <p style="font-size: 16px; margin-bottom: 20px;">The servers, databases, and APIs that power the AyuAware intelligence.</p>
+
+      <div class="tech-card">
+        <h3>🟢 Node.js API (with TypeScript)</h3>
+        <div class="tech-role">Role in AyuAware: The "Brain" of the system.</div>
+        <p>This is the server code that receives data from the mobile app, talks to the AI (OpenAI/Gemini), talks to Spike (wearables), calculates logic, and sends responses back.</p>
+        <p><b>Why for MVP:</b> It uses the exact same language (TypeScript) as the mobile app. This means data models can be seamlessly shared between the app and the server without translation errors, significantly accelerating AI-assisted development.</p>
+      </div>
+
+      <div class="tech-card">
+        <h3>🐘 PostgreSQL Database (Neon)</h3>
+        <div class="tech-role">Role in AyuAware: The permanent memory storage.</div>
+        <p>This holds all user profiles, check-ins, health data, and generated protocols. It enforces strict rules so data doesn't get corrupted.</p>
+        <p><b>Why for MVP:</b> Neon gives managed serverless Postgres with strong reliability and fast setup while keeping full SQL/Postgres compatibility.</p>
+        <p><b>Plan path:</b> <b>Free: $0</b> in development → <b>Launch: usage-based (typical ~$15/month)</b> at launch → scale to higher usage tiers as growth increases. <span>(Pricing can change; verify before go-live.)</span></p>
+      </div>
+
+      <div class="tech-card">
+        <h3>◭ Prisma (ORM)</h3>
+        <div class="tech-role">Role in AyuAware: The safe translator between the Node.js API and the Database.</div>
+        <p>Instead of writing raw, easily-broken SQL queries to fetch user data, Prisma lets the code interact with the database using safe, autocomplete-friendly commands.</p>
+        <p><b>Why for MVP:</b> It provides strict data typing. If a database query attempts to access a field that doesn't exist, Prisma catches the error *before* the code even runs, preventing app crashes. This strict typing is critical for rapid, AI-assisted code generation.</p>
+      </div>
+      
+      <div class="tech-card">
+        <h3>🧠 LLM & Intelligence Layer</h3>
+        <div class="tech-role">Role in AyuAware: The logic engine driving the Digital Twin, diagnosis, and protocol generation.</div>
+        <p><b>Default model for MVP:</b> <b>Claude Sonnet 4.6</b>. We start with Claude for strong instruction-following, consistent structured outputs, and high-quality conversational behavior for frequent user interactions.</p>
+        <p><b>Provider flexibility (built-in):</b> the backend uses a unified routing layer (e.g., <b>Vercel AI SDK</b> or <b>LiteLLM</b>) instead of hardcoding one vendor. This keeps model/provider switching simple as we add OpenAI, Gemini, and others.</p>
+        <p><b>Future intelligence layer evolution:</b> this layer will expand with a vector database for key long-term context (conversation memory, important user patterns) and a fine-tuned model trained on user interactions plus real successful-case outcomes.</p>
+      </div>
+
+      <div class="tech-card">
+        <h3>☁️ External Services (incl. AWS S3 or Cloudflare R2)</h3>
+        <div class="tech-role">Role in AyuAware: Plugging in existing tools to save time.</div>
+        <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+            <li><b>Better Auth / NextAuth:</b> Handles secure user login (Apple/Google/Email) without us building security from scratch.</li>
+            <li><b>Spike API:</b> Ingests Apple Health/Oura data cleanly without us writing custom parsers for every watch brand.</li>
+            <li><b>AWS S3 (or S3-compatible storage like R2):</b> Stores user-uploaded tongue scans and lab report PDFs.</li>
+        </ul>
+        <p style="margin-top:10px"><b>Why not store files directly in Neon?</b> We keep binary files (images/PDFs) in object storage because it is cheaper and optimized for large files, while Neon/Postgres stays focused on structured app data and file metadata (URLs, timestamps, analysis status). This keeps database performance healthy as usage grows.</p>
+      </div>
+      
+      <details class="card" style="margin-top:14px">
+        <h3>🔐 Environment & API Keys (click to expand)</h3>
+        <div>
+          <p>Kept intentionally minimal for MVP. Most teams only need to touch these values.</p>
+
+          <h3 style="margin:10px 0 6px;color:var(--a)">A) Runtime essentials (.env)</h3>
+          <pre style="background:#070b18; padding:14px; border-radius:10px; border:1px solid #5b7fe0; font-size:13px; line-height:1.5; overflow-x:auto; color:#d6c9ff;">
+DATABASE_URL=
+AUTH_SECRET=
+APPLE_CLIENT_ID=
+APPLE_CLIENT_SECRET=
+AI_DEFAULT_MODEL=claude-sonnet-4.6
+          </pre>
+
+          <h3 style="margin:10px 0 6px;color:var(--a)">B) Team-managed API keys (human owner checklist)</h3>
+          <table class="table">
+            <thead><tr><th>Key Group</th><th>Keys to manage</th><th>Owner note</th></tr></thead>
+            <tbody>
+              <tr><td>LLM Providers</td><td><code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code> (optional), <code>GEMINI_API_KEY</code> (optional)</td><td>Claude is default; add others when routing expands.</td></tr>
+              <tr><td>Wearables</td><td><code>SPIKE_API_KEY</code>, <code>SPIKE_WEBHOOK_SECRET</code></td><td>Needed for daily data sync and webhook trust.</td></tr>
+              <tr><td>Storage</td><td><code>S3_ENDPOINT</code>, <code>S3_BUCKET</code>, <code>S3_ACCESS_KEY_ID</code>, <code>S3_SECRET_ACCESS_KEY</code></td><td>For scans, reports, and media uploads.</td></tr>
+              <tr><td>Auth/OAuth</td><td><code>APPLE_CLIENT_ID</code>, <code>APPLE_CLIENT_SECRET</code>, <code>GOOGLE_CLIENT_ID</code> (optional), <code>GOOGLE_CLIENT_SECRET</code> (optional)</td><td>Apple Sign-In is required for iOS-first MVP.</td></tr>
+              <tr><td>Ops/Monitoring (optional)</td><td><code>SENTRY_DSN</code>, <code>LOG_LEVEL</code></td><td>Recommended for production stability.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <div></div>
+
+          </div>
+    </details>
+      <h2>🧱 Data Structures</h2>
+      <p>Expandable cards below — click to open/close each object.</p>
+      <div></div>
+
+      <section>
+        <h3>🧑 User Object (<code>users</code>)</h3>
+        <div>
+          <p>Core identity + plan + lifecycle fields for MVP.</p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span> auto-generated</td></tr>
+              <tr><td><code>email</code></td><td>VARCHAR(255)</td><td><span class="badge req">required</span> unique, lowercase</td></tr>
+              <tr><td><code>email_verified</code></td><td>BOOLEAN</td><td>default <code>false</code></td></tr>
+              <tr><td><code>full_name</code></td><td>VARCHAR(120)</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>date_of_birth</code></td><td>DATE</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>gender</code></td><td>ENUM</td><td><span class="badge opt">optional</span> male/female/non_binary/prefer_not_to_say</td></tr>
+              <tr><td><code>timezone</code></td><td>VARCHAR(64)</td><td><span class="badge req">required</span> default user/app zone</td></tr>
+              <tr><td><code>subscription_tier</code></td><td>ENUM</td><td>default <code>free</code> (free/personal/premium)</td></tr>
+              <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>default <code>now()</code></td></tr>
+              <tr><td><code>updated_at</code></td><td>TIMESTAMPTZ</td><td>default <code>now()</code> (+ trigger on update)</td></tr>
+              <tr><td><code>deleted_at</code></td><td>TIMESTAMPTZ</td><td><span class="badge opt">soft delete</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h3>🧬 Prakriti Object (<code>user_constitution</code>)</h3>
+        <div>
+          <p>Aligned to latest team context: <b>18-question</b> questionnaire + scoring versioning.</p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id, unique (1:1)</td></tr>
+              <tr><td><code>vata_percentage</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>pitta_percentage</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>kapha_percentage</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>primary_dosha</code></td><td>ENUM</td><td>vata/pitta/kapha</td></tr>
+              <tr><td><code>secondary_dosha</code></td><td>ENUM</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>is_bidoshic</code></td><td>BOOLEAN</td><td>default false</td></tr>
+              <tr><td><code>is_tridoshic</code></td><td>BOOLEAN</td><td>default false</td></tr>
+              <tr><td><code>dominant_type</code></td><td>VARCHAR(30)</td><td>e.g. vata / vata-pitta / tridoshic</td></tr>
+              <tr><td><code>questionnaire_version</code></td><td>SMALLINT</td><td>default 18</td></tr>
+              <tr><td><code>questionnaire_name</code></td><td>VARCHAR(50)</td><td>default prakriti_18q</td></tr>
+              <tr><td><code>scoring_version</code></td><td>VARCHAR(20)</td><td>default v1</td></tr>
+              <tr><td><code>bidoshic_threshold_pct</code></td><td>SMALLINT</td><td>default 20</td></tr>
+              <tr><td><code>tridoshic_threshold_pct</code></td><td>SMALLINT</td><td>default 10</td></tr>
+              <tr><td><code>assessment_responses</code></td><td>JSONB</td><td><span class="badge req">required</span> raw q/a + mapped dosha</td></tr>
+              <tr><td><code>section_scores</code></td><td>JSONB</td><td><span class="badge req">required</span> physical / physiology_agni / mental_manas</td></tr>
+              <tr><td><code>total_scores</code></td><td>JSONB</td><td><span class="badge req">required</span> vata/pitta/kapha points</td></tr>
+              <tr><td><code>assessment_source</code></td><td>ENUM</td><td>onboarding/reassessment/manual_override</td></tr>
+              <tr><td><code>assessed_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+              <tr><td><code>reassessed_at</code></td><td>TIMESTAMPTZ</td><td><span class="badge opt">optional</span></td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top:10px">Constraint: <code>vata + pitta + kapha = 100</code>; if <code>is_bidoshic=true</code>, secondary_dosha must exist.</p>
+        </div>
+      </section>
+
+      <section>
+        <h3>⚖️ Vikriti Snapshot (<code>user_current_state</code>)</h3>
+        <div>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id, unique (1:1)</td></tr>
+              <tr><td><code>vata_imbalance</code></td><td>SMALLINT</td><td>default 0, range -10..+10</td></tr>
+              <tr><td><code>pitta_imbalance</code></td><td>SMALLINT</td><td>default 0, range -10..+10</td></tr>
+              <tr><td><code>kapha_imbalance</code></td><td>SMALLINT</td><td>default 0, range -10..+10</td></tr>
+              <tr><td><code>agni_state</code></td><td>ENUM</td><td>sama/vishama/tikshna/manda (default sama)</td></tr>
+              <tr><td><code>ama_level</code></td><td>ENUM</td><td>none/low/moderate/high (default none)</td></tr>
+              <tr><td><code>ojas_level</code></td><td>SMALLINT</td><td>1..10 (default 7)</td></tr>
+              <tr><td><code>active_symptoms</code></td><td>TEXT[]</td><td>active symptom codes/labels</td></tr>
+              <tr><td><code>manas_score</code></td><td>SMALLINT</td><td><span class="badge opt">nullable</span> pending formula</td></tr>
+              <tr><td><code>prana_score</code></td><td>SMALLINT</td><td><span class="badge opt">nullable</span> pending formula</td></tr>
+              <tr><td><code>last_updated_by</code></td><td>ENUM</td><td>checkin/spike/scan/lab/manual/system</td></tr>
+              <tr><td><code>last_input_ref</code></td><td>JSONB</td><td><span class="badge opt">nullable</span> source trace payload</td></tr>
+              <tr><td><code>updated_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h3>📝 Daily Check-ins (<code>daily_checkins</code>)</h3>
+        <div>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td>part of PK (id, checked_in_at)</td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>checked_in_at</code></td><td>TIMESTAMPTZ</td><td><span class="badge req">required</span> default now()</td></tr>
+              <tr><td><code>energy_level</code></td><td>SMALLINT</td><td>1..10</td></tr>
+              <tr><td><code>sleep_quality</code></td><td>SMALLINT</td><td>1..10</td></tr>
+              <tr><td><code>digestion_state</code></td><td>ENUM</td><td>good/variable/sluggish/burning</td></tr>
+              <tr><td><code>mood</code></td><td>ENUM</td><td>calm/anxious/irritable/heavy/mixed</td></tr>
+              <tr><td><code>symptoms</code></td><td>TEXT[]</td><td>multi-select + free text mapped list</td></tr>
+              <tr><td><code>notes</code></td><td>TEXT</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>source</code></td><td>ENUM</td><td>app/chat (default app)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h3>📡 Wearable Stream via Spike (<code>wearable_data_points</code>)</h3>
+        <div>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td>part of PK (id, recorded_at)</td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>provider</code></td><td>ENUM</td><td>default spike</td></tr>
+              <tr><td><code>device_type</code></td><td>VARCHAR(50)</td><td>from Spike source metadata</td></tr>
+              <tr><td><code>data_type</code></td><td>ENUM</td><td>sleep/activity/heart_rate/hrv/temperature/respiratory</td></tr>
+              <tr><td><code>recorded_at</code></td><td>TIMESTAMPTZ</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>raw_values</code></td><td>JSONB</td><td><span class="badge req">required</span> normalized Spike payload</td></tr>
+              <tr><td><code>dosha_signal</code></td><td>ENUM</td><td><span class="badge opt">nullable</span> vata/pitta/kapha/balanced</td></tr>
+              <tr><td><code>interpretation</code></td><td>TEXT</td><td><span class="badge opt">nullable</span></td></tr>
+              <tr><td><code>synced_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h3>🧪 Lab Reports (<code>lab_results</code>)</h3>
+        <div>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td>FK users.id</td></tr>
+              <tr><td><code>test_date</code></td><td>DATE</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>lab_name</code></td><td>VARCHAR(255)</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>file_url</code></td><td>TEXT</td><td>secure file pointer</td></tr>
+              <tr><td><code>biomarkers</code></td><td>JSONB</td><td>parsed biomarker array</td></tr>
+              <tr><td><code>overall_pattern</code></td><td>TEXT</td><td>AI summary</td></tr>
+              <tr><td><code>root_cause_analysis</code></td><td>TEXT</td><td>Ayurvedic interpretation</td></tr>
+              <tr><td><code>action_plan</code></td><td>TEXT[]</td><td>recommended actions</td></tr>
+              <tr><td><code>medical_flags</code></td><td>TEXT[]</td><td>critical markers</td></tr>
+              <tr><td><code>ocr_status</code></td><td>ENUM</td><td>pending/processing/complete/failed</td></tr>
+              <tr><td><code>processed_at</code></td><td>TIMESTAMPTZ</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>uploaded_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h3>📸 Scan Reports (<code>scan_analyses</code>)</h3>
+        <div>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td>FK users.id</td></tr>
+              <tr><td><code>scan_type</code></td><td>ENUM</td><td>tongue/meal/skin/product</td></tr>
+              <tr><td><code>image_url</code></td><td>TEXT</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>analysis</code></td><td>JSONB</td><td><span class="badge req">required</span> structured output</td></tr>
+              <tr><td><code>dosha_indicators</code></td><td>TEXT[]</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>ama_signal</code></td><td>ENUM</td><td><span class="badge opt">nullable</span> none/low/moderate/high</td></tr>
+              <tr><td><code>agni_signal</code></td><td>ENUM</td><td><span class="badge opt">nullable</span> sama/vishama/tikshna/manda</td></tr>
+              <tr><td><code>recommendations</code></td><td>TEXT[]</td><td>suggested actions</td></tr>
+              <tr><td><code>scanned_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h3>🧭 Protocol Data Structures</h3>
+        <div>
+          <p>Structured protocol planning, tasks, logs, events, and outcomes.</p>
+
+          <p><b><code>protocols</code></b></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>name</code></td><td>VARCHAR(140)</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>status</code></td><td>ENUM</td><td>draft/active/paused/completed/archived</td></tr>
+              <tr><td><code>start_date</code></td><td>DATE</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>end_date</code></td><td>DATE</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>current_phase</code></td><td>SMALLINT</td><td>default 0</td></tr>
+              <tr><td><code>goal</code></td><td>TEXT</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>source</code></td><td>ENUM</td><td>ai/practitioner/template</td></tr>
+              <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+              <tr><td><code>updated_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>protocol_tasks</code></b></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>protocol_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK protocols.id</td></tr>
+              <tr><td><code>title</code></td><td>VARCHAR(200)</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>category</code></td><td>ENUM</td><td>dietary/lifestyle/herbs/practices/environmental</td></tr>
+              <tr><td><code>phase</code></td><td>SMALLINT</td><td>0 = all phases</td></tr>
+              <tr><td><code>frequency</code></td><td>VARCHAR(50)</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>timing</code></td><td>VARCHAR(50)</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>is_active</code></td><td>BOOLEAN</td><td>default true</td></tr>
+              <tr><td><code>metadata</code></td><td>JSONB</td><td><span class="badge opt">optional</span> tips/contraindications</td></tr>
+              <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>protocol_task_logs</code></b></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>protocol_task_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK protocol_tasks.id</td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>logged_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+              <tr><td><code>status</code></td><td>ENUM</td><td>completed/skipped/partial</td></tr>
+              <tr><td><code>notes</code></td><td>TEXT</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>skipped_reason</code></td><td>TEXT</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>source</code></td><td>ENUM</td><td>app/chat/system</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>protocol_events</code></b></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>protocol_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK protocols.id</td></tr>
+              <tr><td><code>event_type</code></td><td>ENUM</td><td>created/activated/paused/resumed/completed/adjusted</td></tr>
+              <tr><td><code>event_payload</code></td><td>JSONB</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>trigger_source</code></td><td>ENUM</td><td>user/ai/system/practitioner</td></tr>
+              <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>protocol_adjustments</code></b></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>protocol_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK protocols.id</td></tr>
+              <tr><td><code>requested_by</code></td><td>ENUM</td><td>user/ai/practitioner/system</td></tr>
+              <tr><td><code>reason</code></td><td>TEXT</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>change_set</code></td><td>JSONB</td><td><span class="badge req">required</span> task diffs</td></tr>
+              <tr><td><code>applied_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>protocol_outcomes</code></b></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>protocol_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK protocols.id</td></tr>
+              <tr><td><code>metric</code></td><td>VARCHAR(120)</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>baseline_value</code></td><td>VARCHAR(50)</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>target_value</code></td><td>VARCHAR(50)</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>actual_value</code></td><td>VARCHAR(50)</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>measured_at</code></td><td>TIMESTAMPTZ</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>notes</code></td><td>TEXT</td><td><span class="badge opt">optional</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h3>🗣️ Twin + Chat Data Structures (from My Twin screens)</h3>
+        <div>
+          <p>Aligned to Twin UI flows: ask-anything chat, learning progress, pattern cards, predictions, notification settings, and privacy/data-source preferences.</p>
+
+          <p><b><code>conversations</code></b> <span class="badge req">MVP core</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>context_type</code></td><td>ENUM</td><td>general/constitution/patterns/predictions/protocol</td></tr>
+              <tr><td><code>title</code></td><td>VARCHAR(140)</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>status</code></td><td>ENUM</td><td>active/archived</td></tr>
+              <tr><td><code>started_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+              <tr><td><code>last_message_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>messages</code></b> <span class="badge req">MVP core</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>conversation_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK conversations.id</td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>role</code></td><td>ENUM</td><td>user/assistant/system</td></tr>
+              <tr><td><code>content</code></td><td>TEXT</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>intent</code></td><td>VARCHAR(80)</td><td><span class="badge opt">optional</span> e.g. ask_twin/protocol_help/symptom_query</td></tr>
+              <tr><td><code>metadata</code></td><td>JSONB</td><td><span class="badge opt">optional</span> model/tool/safety refs</td></tr>
+              <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>notifications</code></b> <span class="badge req">MVP core</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>kind</code></td><td>ENUM</td><td>prediction_alert/checkin_reminder/morning_summary/protocol_nudge/system</td></tr>
+              <tr><td><code>channel</code></td><td>ENUM</td><td>in_app/push/telegram/whatsapp/email</td></tr>
+              <tr><td><code>status</code></td><td>ENUM</td><td>pending/sent/read/dismissed/failed</td></tr>
+              <tr><td><code>dnd_start</code></td><td>TIME</td><td><span class="badge opt">optional</span> from Twin settings</td></tr>
+              <tr><td><code>dnd_end</code></td><td>TIME</td><td><span class="badge opt">optional</span> from Twin settings</td></tr>
+              <tr><td><code>scheduled_for</code></td><td>TIMESTAMPTZ</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>sent_at</code></td><td>TIMESTAMPTZ</td><td><span class="badge opt">optional</span></td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>user_twin_preferences</code></b> <span class="badge req">MVP lean</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge good">PK/FK</span> users.id</td></tr>
+              <tr><td><code>detail_level</code></td><td>ENUM</td><td>brief/balanced/detailed (screen option)</td></tr>
+              <tr><td><code>sanskrit_usage</code></td><td>ENUM</td><td>minimal/moderate/extensive</td></tr>
+              <tr><td><code>personality_mode</code></td><td>ENUM</td><td>supportive_friend/wise_teacher/clinical_guide</td></tr>
+              <tr><td><code>voice_style</code></td><td>ENUM</td><td>warm_calming/professional_clear/energetic_upbeat</td></tr>
+              <tr><td><code>speech_speed</code></td><td>ENUM</td><td>slow/normal/fast</td></tr>
+              <tr><td><code>prediction_alerts_enabled</code></td><td>BOOLEAN</td><td>default true</td></tr>
+              <tr><td><code>checkin_reminders_enabled</code></td><td>BOOLEAN</td><td>default true</td></tr>
+              <tr><td><code>morning_summary_enabled</code></td><td>BOOLEAN</td><td>default true</td></tr>
+              <tr><td><code>share_mode</code></td><td>ENUM</td><td>all_data/summary_only/per_request_approval</td></tr>
+              <tr><td><code>updated_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>twin_predictions</code></b> <span class="badge req">MVP useful</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>prediction_type</code></td><td>ENUM</td><td>sleep_disruption/stress_spike/digestive_discomfort/energy_crash/custom</td></tr>
+              <tr><td><code>risk_score</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>predicted_for</code></td><td>TIMESTAMPTZ</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>drivers</code></td><td>JSONB</td><td>"why I’m predicting this" factors</td></tr>
+              <tr><td><code>prevention_tips</code></td><td>TEXT[]</td><td>recommended actions</td></tr>
+              <tr><td><code>status</code></td><td>ENUM</td><td>active/resolved/expired</td></tr>
+              <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:10px">Note: advanced learning stages (e.g., genomic integration progression) can remain metadata in MVP and be normalized later if needed.</p>
+        </div>
+      </section>
+
+      <section>
+        <h3>🥗 Nutrition, Supplements & Lifestyle</h3>
+        <div>
+          <p>Proposed from Nutrition/Supplements screens + lifestyle signals visible in Health/Exposure screens.</p>
+
+          <p><b><code>nutrition_logs</code></b> <span class="badge req">MVP core</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>logged_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+              <tr><td><code>meal_type</code></td><td>ENUM</td><td>breakfast/lunch/dinner/snack</td></tr>
+              <tr><td><code>meal_time_local</code></td><td>TIME</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>meal_log_method</code></td><td>ENUM</td><td>photo/manual/favorites</td></tr>
+              <tr><td><code>food_items</code></td><td>JSONB</td><td><span class="badge req">required</span> item list + quantity</td></tr>
+              <tr><td><code>agni_score</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>dosha_effect</code></td><td>JSONB</td><td>vata/pitta/kapha impact + intensity</td></tr>
+              <tr><td><code>meal_context</code></td><td>ENUM</td><td>calm/rushed/distracted</td></tr>
+              <tr><td><code>digestion_status</code></td><td>ENUM</td><td>good/variable/sluggish/burning</td></tr>
+              <tr><td><code>image_url</code></td><td>TEXT</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>notes</code></td><td>TEXT</td><td><span class="badge opt">optional</span></td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>nutrition_daily_summaries</code></b> <span class="badge req">MVP useful</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>summary_date</code></td><td>DATE</td><td><span class="badge req">required</span> unique per user/day</td></tr>
+              <tr><td><code>overall_dosha_balance</code></td><td>JSONB</td><td>vata/pitta/kapha percentages</td></tr>
+              <tr><td><code>agni_compatibility_score</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>meal_spacing_minutes</code></td><td>SMALLINT[]</td><td>derived intervals</td></tr>
+              <tr><td><code>insight_text</code></td><td>TEXT</td><td>daily AI/user-facing summary</td></tr>
+              <tr><td><code>dinner_recommendation</code></td><td>JSONB</td><td>prefer/avoid/timing suggestions</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>supplement_schedules</code></b> <span class="badge req">MVP core</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>supplement_name</code></td><td>VARCHAR(255)</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>dosage</code></td><td>VARCHAR(80)</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>schedule_window</code></td><td>ENUM</td><td>upon_waking/before_meal/after_breakfast/evening/bedtime/custom</td></tr>
+              <tr><td><code>scheduled_time</code></td><td>TIME</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>purpose</code></td><td>TEXT</td><td><span class="badge opt">optional</span> e.g. stress + vata balance</td></tr>
+              <tr><td><code>intake_instructions</code></td><td>TEXT</td><td><span class="badge opt">optional</span> with warm water/empty stomach</td></tr>
+              <tr><td><code>is_active</code></td><td>BOOLEAN</td><td>default true</td></tr>
+              <tr><td><code>reminder_enabled</code></td><td>BOOLEAN</td><td>default true</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>supplement_intake_logs</code></b> <span class="badge req">MVP core</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>schedule_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK supplement_schedules.id</td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>intake_date</code></td><td>DATE</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>status</code></td><td>ENUM</td><td>taken/skipped/partial</td></tr>
+              <tr><td><code>taken_time</code></td><td>TIMESTAMPTZ</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>next_due_at</code></td><td>TIMESTAMPTZ</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>notes</code></td><td>TEXT</td><td><span class="badge opt">optional</span></td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>supplement_adherence_daily</code></b> <span class="badge req">MVP useful</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>summary_date</code></td><td>DATE</td><td><span class="badge req">required</span> unique per user/day</td></tr>
+              <tr><td><code>daily_target_count</code></td><td>SMALLINT</td><td>expected intakes</td></tr>
+              <tr><td><code>daily_taken_count</code></td><td>SMALLINT</td><td>completed intakes</td></tr>
+              <tr><td><code>daily_adherence_pct</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>weekly_adherence_pct</code></td><td>SMALLINT</td><td>0..100 rolling 7d</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>lifestyle_signals_daily</code></b> <span class="badge req">MVP useful</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>signal_date</code></td><td>DATE</td><td><span class="badge req">required</span> unique per user/day</td></tr>
+              <tr><td><code>activity_level</code></td><td>ENUM</td><td>low/moderate/high</td></tr>
+              <tr><td><code>meditation_done</code></td><td>BOOLEAN</td><td>default false</td></tr>
+              <tr><td><code>meal_timing_quality</code></td><td>ENUM</td><td>poor/fair/good</td></tr>
+              <tr><td><code>morning_sluggishness</code></td><td>BOOLEAN</td><td>default false</td></tr>
+              <tr><td><code>stress_level</code></td><td>SMALLINT</td><td>1..10</td></tr>
+              <tr><td><code>nidra_score</code></td><td>SMALLINT</td><td>1..10</td></tr>
+              <tr><td><code>hrv_value</code></td><td>NUMERIC(6,2)</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>notes</code></td><td>TEXT</td><td><span class="badge opt">optional</span></td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>chi_daily_scores</code></b> <span class="badge req">MVP useful</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>score_date</code></td><td>DATE</td><td><span class="badge req">required</span> unique per user/day</td></tr>
+              <tr><td><code>chi_score</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>chi_band</code></td><td>ENUM</td><td>poor/fair/good/excellent</td></tr>
+              <tr><td><code>delta_vs_yesterday_pct</code></td><td>SMALLINT</td><td>-100..100</td></tr>
+              <tr><td><code>avg_7d</code></td><td>SMALLINT</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>avg_30d</code></td><td>SMALLINT</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>positive_factors</code></td><td>JSONB</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>improvement_factors</code></td><td>JSONB</td><td><span class="badge opt">optional</span></td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>environment_exposure_snapshots</code></b> <span class="badge req">MVP useful</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>captured_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+              <tr><td><code>weather_condition_text</code></td><td>VARCHAR(120)</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>temperature_c</code></td><td>NUMERIC(5,2)</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>humidity_pct</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>exposure_index</code></td><td>SMALLINT</td><td><span class="badge opt">optional</span> AQI/UV/pollen depending source</td></tr>
+              <tr><td><code>dosha_impact</code></td><td>ENUM</td><td>vata/pitta/kapha/balanced/mixed</td></tr>
+              <tr><td><code>impact_reason_text</code></td><td>TEXT</td><td><span class="badge opt">optional</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h3>🌤️ Exposure & ❤️ Health</h3>
+        <div>
+          <p>Dedicated drill from Exposure + Health screens (CHI, drivers, trends, recommendations).</p>
+
+          <p><b><code>health_chi_components_daily</code></b> <span class="badge req">MVP useful</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>score_date</code></td><td>DATE</td><td><span class="badge req">required</span> unique per user/day</td></tr>
+              <tr><td><code>prakriti_score</code></td><td>SMALLINT</td><td>0..100 <span class="badge opt">optional</span></td></tr>
+              <tr><td><code>vikriti_score</code></td><td>SMALLINT</td><td>0..100 <span class="badge opt">optional</span></td></tr>
+              <tr><td><code>agni_score</code></td><td>SMALLINT</td><td>0..100 <span class="badge opt">optional</span></td></tr>
+              <tr><td><code>ojas_score</code></td><td>SMALLINT</td><td>0..100 <span class="badge opt">optional</span></td></tr>
+              <tr><td><code>manas_score</code></td><td>SMALLINT</td><td>0..100 <span class="badge opt">optional</span></td></tr>
+              <tr><td><code>nidra_score</code></td><td>SMALLINT</td><td>0..100 <span class="badge opt">optional</span></td></tr>
+              <tr><td><code>prana_score</code></td><td>SMALLINT</td><td>0..100 <span class="badge opt">optional</span></td></tr>
+              <tr><td><code>computed_chi_score</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>explainability</code></td><td>JSONB</td><td>weights + contributing features snapshot</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>health_insight_cards</code></b> <span class="badge req">MVP core</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>card_date</code></td><td>DATE</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>insight_level</code></td><td>ENUM</td><td>quick/full</td></tr>
+              <tr><td><code>summary_text</code></td><td>TEXT</td><td><span class="badge req">required</span></td></tr>
+              <tr><td><code>positive_contributors</code></td><td>JSONB</td><td>list of positive factors</td></tr>
+              <tr><td><code>improvement_areas</code></td><td>JSONB</td><td>list of issues + priority</td></tr>
+              <tr><td><code>recommended_actions</code></td><td>TEXT[]</td><td>CTA/action bullets</td></tr>
+              <tr><td><code>source_refs</code></td><td>JSONB</td><td>links to checkins/wearables/exposure points</td></tr>
+              <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>chi_trend_points</code></b> <span class="badge req">MVP useful</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>point_date</code></td><td>DATE</td><td><span class="badge req">required</span> indexed for charting</td></tr>
+              <tr><td><code>chi_score</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>rolling_avg_7d</code></td><td>SMALLINT</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>rolling_avg_30d</code></td><td>SMALLINT</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>trend_direction</code></td><td>ENUM</td><td>up/stable/down</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:12px"><b><code>exposure_impact_events</code></b> <span class="badge req">MVP core</span></p>
+          <table class="table">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td><span class="badge good">PK</span></td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td><span class="badge req">required</span> FK users.id</td></tr>
+              <tr><td><code>captured_at</code></td><td>TIMESTAMPTZ</td><td>default now()</td></tr>
+              <tr><td><code>temperature_c</code></td><td>NUMERIC(5,2)</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>humidity_pct</code></td><td>SMALLINT</td><td>0..100</td></tr>
+              <tr><td><code>exposure_index_type</code></td><td>ENUM</td><td>aqi/uv/pollen/other</td></tr>
+              <tr><td><code>exposure_index_value</code></td><td>SMALLINT</td><td><span class="badge opt">optional</span></td></tr>
+              <tr><td><code>condition_label</code></td><td>VARCHAR(120)</td><td>e.g. warm, humid, partly cloudy</td></tr>
+              <tr><td><code>dosha_impact</code></td><td>ENUM</td><td>vata_aggravating/pitta_aggravating/kapha_aggravating/balanced/mixed</td></tr>
+              <tr><td><code>impact_severity</code></td><td>ENUM</td><td>low/moderate/high</td></tr>
+              <tr><td><code>impact_reason</code></td><td>TEXT</td><td>human-readable explanation</td></tr>
+              <tr><td><code>recommended_exposure_actions</code></td><td>TEXT[]</td><td>hydration/cooling/avoid-sun etc.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </section>
+
+    </section>
+
+    <section>
+      <h2>🧭 Flows</h2>
+<details>
+      <summary>🧠 Intelligence Prompt Architecture (click to expand)</summary>
+      <div>
+        <p>Defines how AI behavior is controlled consistently across all screens.</p>
+
+        <h3>Core Model</h3>
+        <p>Every AI request uses a two-layer prompt system:</p>
+        <ul>
+          <li><b>Layer 1: Master Prompt</b> — global behavior, safety, tone, Ayurvedic rules, and medical boundaries.</li>
+          <li><b>Layer 2: Screen Sub-Prompt</b> — screen/action-specific instructions (e.g., NSL plan, exposure analysis, astrology insight, protocol update).</li>
+        </ul>
+
+        <h3>Base Context Assembly Contract (Canonical)</h3>
+        <p>This is the mandatory context bundle sent on every AI call before any screen-specific additions.</p>
+        <table class="table">
+          <thead><tr><th>Context Key</th><th>Source</th><th>Window / Rule</th></tr></thead>
+          <tbody>
+            <tr><td><code>user_profile</code></td><td><code>users</code></td><td>Latest profile + preferences</td></tr>
+            <tr><td><code>prakriti</code></td><td><code>user_constitution</code></td><td>Latest assessed constitution</td></tr>
+            <tr><td><code>latest_vikriti</code></td><td><code>user_current_state</code></td><td>Latest state snapshot</td></tr>
+            <tr><td><code>active_protocol</code></td><td><code>protocols</code> + <code>protocol_tasks</code></td><td>Current active protocol only</td></tr>
+            <tr><td><code>recent_checkins</code></td><td><code>daily_checkins</code></td><td><b>Last 7 days</b></td></tr>
+            <tr><td><code>wearables_snapshot</code></td><td><code>wearable_data_points</code></td><td>Last 72 hours</td></tr>
+            <tr><td><code>recent_chat_summary</code></td><td><code>conversations/messages</code></td><td>Rolling summary of last 20 messages (or 7 days)</td></tr>
+            <tr><td><code>environment_exposure</code></td><td><code>exposure_impact_events</code></td><td>Last 48 hours</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Conflict Resolution & Precedence</h3>
+        <ul>
+          <li><b>Wearable data wins</b> whenever wearable data conflicts with manual or inferred values (for measurable health signals).</li>
+          <li>Manual user input is second priority and can be used when wearable data is missing or clearly invalid.</li>
+          <li>Model-inferred values are advisory only and never override explicit user input.</li>
+        </ul>
+
+        <h3>Missing Context Behavior</h3>
+        <ul>
+          <li>If core context is missing (<code>user_profile</code>, <code>prakriti</code>, or <code>latest_vikriti</code>): <b>block and ask user</b>.</li>
+          <li>If secondary context is missing (wearables, exposure, recent chat summary): continue with partial context and reduced confidence.</li>
+          <li>All partial-context responses must set <code>status="fallback"</code> or <code>meta.confidence</code> below normal threshold.</li>
+        </ul>
+
+        <h3>Confidence Thresholds</h3>
+        <ul>
+          <li><code>confidence &lt; 0.50</code>: fallback response only, no strong recommendations.</li>
+          <li><code>0.50 - 0.70</code>: cautious recommendations with explicit uncertainty wording.</li>
+          <li><code>&gt; 0.70</code>: standard response path.</li>
+        </ul>
+
+        <h3>Screen-Specific Mandatory Additions (Beyond Base Context)</h3>
+        <table class="table">
+          <thead><tr><th>MVP Screen / Flow</th><th>Mandatory Extra Context</th></tr></thead>
+          <tbody>
+            <tr><td>Onboarding</td><td>Full onboarding questionnaire payload + completion status</td></tr>
+            <tr><td>My Twin</td><td>Twin preferences + last 24h state deltas</td></tr>
+            <tr><td>General Query Chat</td><td>Latest user message + response guideline filter state</td></tr>
+            <tr><td>Today</td><td>Today check-in payload + rolling 7-day trend</td></tr>
+            <tr><td>Protocol Create/Modify</td><td>Current protocol task graph + contraindications/safety flags</td></tr>
+            <tr><td>Health</td><td>CHI trend points + latest wearables rollup + latest exposure impact</td></tr>
+            <tr><td>NSL</td><td>Latest meal logs + supplement adherence + digestion signals</td></tr>
+            <tr><td>Exposure</td><td>Current geo/time context + local weather/exposure index feed</td></tr>
+            <tr><td>Projects</td><td>Active project goal/stage + linked protocol progress</td></tr>
+          </tbody>
+        </table>
+
+        <h3>User-Facing Safety Fallback Copy (v1)</h3>
+        <ul>
+          <li><b>MODEL_TIMEOUT:</b> "I could not complete this analysis in time. Please retry in a moment."</li>
+          <li><b>INVALID_OUTPUT:</b> "I could not generate a reliable recommendation right now. Please try again."</li>
+          <li><b>SAFETY_BLOCK:</b> "I cannot safely answer this directly. Please consult a qualified practitioner for this decision."</li>
+          <li><b>MISSING_CORE_CONTEXT:</b> "I need a few required details before I can generate an accurate recommendation."</li>
+        </ul>
+
+        <h3>Prompt Mapping Contract</h3>
+        <table class="table">
+          <thead><tr><th>Field</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>screen_id</code> (Figma)</td><td>Binds prompt behavior to a concrete UI screen.</td></tr>
+            <tr><td><code>action_type</code></td><td>Defines the AI job (chat, generate, modify, analyze, predict).</td></tr>
+            <tr><td><code>sub_prompt_id</code></td><td>Selects specialized prompt instructions for that action.</td></tr>
+            <tr><td><code>input_contract</code></td><td>Required context/data fields before sending to model.</td></tr>
+            <tr><td><code>output_schema</code></td><td>Structured response format expected from the model.</td></tr>
+          </tbody>
+        </table>
+
+<h3>Fallback Rule (Mandatory)</h3>
+        <ul>
+          <li>If <code>sub_prompt_id</code> exists: run <b>Master Prompt + Sub-Prompt</b>.</li>
+          <li>If no sub-prompt exists: run <b>Master Prompt only</b> (safe default behavior).</li>
+          <li>If output fails schema validation: return safe fallback response, log error, and avoid unsafe/partial guidance.</li>
+        </ul>
+
+        <h3>Master Prompt Reference</h3>
+        <p><a href="https://github.com/AnasShaikh/AyuAware/blob/main/docs/AyuAware-%20Master%20Prompt.txt" target="_blank" rel="noopener">AyuAware Master Prompt (GitHub)</a></p>
+      </div>
+    </details>
+
+
+      <p>Direct flow image links for bots: <a href="http://89.117.52.159/master-site-flow.jpg">Master Site Flow</a> | <a href="http://89.117.52.159/flow-onboarding.jpg">Onboarding</a> | <a href="http://89.117.52.159/flow-general-query.jpg">General Query</a> | <a href="http://89.117.52.159/flow-rendering-screen.jpg">Rendering Screen</a></p>
+      <section>
+        <h3>Flow 1 — Master Site Flow</h3>
+        <div>
+          <img src="http://89.117.52.159/master-site-flow.jpg" alt="Master Site Flow" style="width:100%;border-radius:10px;border:1px solid #cfba95;background:#f7f2e8" />
+        </div>
+      </section>
+      <section>
+        <h3>Flow 2 — Onboarding Flow (Detailed)</h3>
+        <div>
+          <img src="http://89.117.52.159/flow-onboarding.jpg" alt="Onboarding Flow" style="width:100%;border-radius:10px;border:1px solid #cfba95;background:#f7f2e8" />
+        </div>
+      </section>
+      <section>
+        <h3>Flow 3 — General User Query Flow (Onboarded User)</h3>
+        <div>
+          <img src="http://89.117.52.159/flow-general-query.jpg" alt="General User Query Flow" style="width:100%;border-radius:10px;border:1px solid #cfba95;background:#f7f2e8" />
+        </div>
+      </section>
+      <section>
+        <h3>Flow 4 — Rendering Any Screen (My Twin as Example)</h3>
+        <div>
+          <img src="http://89.117.52.159/flow-rendering-screen.jpg" alt="Rendering any Screen (My Twin as Example)" style="width:100%;border-radius:10px;border:1px solid #cfba95;background:#f7f2e8" />
+        </div>
+      </section>
+      <section>
+        <h3>Flow 5 — Screen-to-Prompt Mapping (AyuAware)</h3>
+        <p>Maps each screen/flow to its AI action and specialized sub-prompt.</p>
+        <table class="table prompt-map-table">
+          <thead><tr><th>Screen / Flow</th><th>action_type</th><th>sub_prompt_id</th><th>Primary Output</th><th>Release</th></tr></thead>
+          <tbody>
+            
+<tr><td>Onboarding - submit details</td><td><code>onboarding_analyze</code></td><td><code>onboarding_prakriti_vikriti_v1</code></td><td><code>constitution_profile_json</code></td><td>MVP</td></tr>
+<tr><td>My Twin - render personalized state</td><td><code>twin_render</code></td><td><code>twin_state_summary_v1</code></td><td><code>twin_screen_payload_json</code></td><td>MVP</td></tr>
+<tr><td>General Query Flow (chat)</td><td><code>twin_chat</code></td><td><code>chat_guided_response_v1</code></td><td><code>chat_response_json</code></td><td>MVP</td></tr>
+<tr><td>Today - check-in submission</td><td><code>checkin_analyze</code></td><td><code>today_checkin_interpret_v1</code></td><td><code>checkin_insight_json</code></td><td>MVP</td></tr>
+<tr><td>Protocol Creation Flow</td><td><code>protocol_generate</code></td><td><code>protocol_generate_core_v1</code></td><td><code>protocol_plan_json</code></td><td>MVP</td></tr>
+<tr><td>Protocol update from chat/context</td><td><code>protocol_modify</code></td><td><code>protocol_adjustment_v1</code></td><td><code>protocol_adjustment_json</code></td><td>MVP</td></tr>
+<tr><td>Health screen analysis</td><td><code>health_analyze</code></td><td><code>health_chi_insights_v1</code></td><td><code>health_insight_cards_json</code></td><td>MVP</td></tr>
+<tr><td>NSL (Nutrition, Supplements, Lifestyle)</td><td><code>nsl_plan_generate</code></td><td><code>nsl_personal_plan_v1</code></td><td><code>nsl_plan_json</code></td><td>MVP</td></tr>
+<tr><td>Exposure screen analysis</td><td><code>exposure_analyze</code></td><td><code>exposure_risk_guidance_v1</code></td><td><code>exposure_actions_json</code></td><td>MVP</td></tr>
+<tr><td>Projects recommendations</td><td><code>projects_suggest</code></td><td><code>projects_recommendation_v1</code></td><td><code>project_suggestions_json</code></td><td>MVP</td></tr>
+
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h3>Flow 6 — AI JSON Contracts (MVP + Sub-screens)</h3>
+        <p>These are v1 payload contracts for AI responses per MVP screen/action. Contracts include sub-screen support so carousel panels can render from a single API response.</p>
+
+        <h4>Common Response Envelope (All AI Actions)</h4>
+        <pre><code>{
+  "screen_id": "string",
+  "action_type": "string",
+  "sub_prompt_id": "string_or_null",
+  "request_id": "uuid",
+  "generated_at": "ISO8601",
+  "model": "string",
+  "status": "ok|fallback|error",
+  "main_screen": {},
+  "subscreens": [],
+  "meta": {
+    "all_subscreens_prefetched": true,
+    "schema_version": "v1",
+    "confidence": 0.0,
+    "safety_flags": []
+  }
+}</code></pre>
+
+        <h4>One-Call Carousel / Sub-screen Rule</h4>
+        <ul>
+          <li>All visible and latent carousel panel data must be returned in the same response.</li>
+          <li>Frontend may reveal panels progressively on slide, but no second AI call is required for panel content.</li>
+          <li>Heavy assets can be referenced as URLs in asset_refs, but text/insight payloads must be preloaded in subscreens[].</li>
+        </ul>
+
+        <h4>1) Onboarding — constitution_profile_json</h4>
+        <pre><code>{
+  "main_screen": {
+    "prakriti": {"vata_pct": 0, "pitta_pct": 0, "kapha_pct": 0, "dominant_type": "string"},
+    "vikriti_baseline": {"vata": 0, "pitta": 0, "kapha": 0},
+    "top_findings": ["string"],
+    "onboarding_summary": "string"
+  },
+  "subscreens": [
+    {"subscreen_id": "constitution_breakdown", "render_on": "slide_2", "content": {"traits": ["string"], "strengths": ["string"]}},
+    {"subscreen_id": "initial_focus_areas", "render_on": "slide_3", "content": {"focus_areas": ["string"], "why": "string"}}
+  ]
+}</code></pre>
+
+        <h4>2) My Twin — twin_screen_payload_json</h4>
+        <pre><code>{
+  "main_screen": {
+    "state_title": "string",
+    "state_summary": "string",
+    "primary_recommendation": "string",
+    "risk_level": "low|moderate|high"
+  },
+  "subscreens": [
+    {"subscreen_id": "today_vs_baseline", "render_on": "slide_2", "content": {"delta": {"vata": 0, "pitta": 0, "kapha": 0}}},
+    {"subscreen_id": "predicted_next_24h", "render_on": "slide_3", "content": {"predictions": ["string"]}}
+  ]
+}</code></pre>
+
+        <h4>3) General Query Chat — chat_response_json</h4>
+        <pre><code>{
+  "main_screen": {
+    "assistant_text": "string",
+    "tone": "supportive|neutral|urgent_safe",
+    "actionable_points": ["string"],
+    "needs_protocol_update": false
+  },
+  "subscreens": [
+    {"subscreen_id": "source_context", "render_on": "expand_context", "content": {"used_inputs": ["prakriti", "vikriti", "recent_checkins", "active_protocol"]}},
+    {"subscreen_id": "followup_options", "render_on": "quick_actions", "content": {"actions": ["string"]}}
+  ]
+}</code></pre>
+
+        <h4>4) Today Check-in — checkin_insight_json</h4>
+        <pre><code>{
+  "main_screen": {
+    "checkin_summary": "string",
+    "dosha_shift": {"vata": 0, "pitta": 0, "kapha": 0},
+    "today_priority": "string"
+  },
+  "subscreens": [
+    {"subscreen_id": "micro_actions", "render_on": "carousel_2", "content": {"actions": ["string"]}},
+    {"subscreen_id": "risk_watch", "render_on": "carousel_3", "content": {"watch_items": ["string"]}}
+  ]
+}</code></pre>
+
+        <h4>5) Protocol Create — protocol_plan_json</h4>
+        <pre><code>{
+  "main_screen": {
+    "protocol_title": "string",
+    "duration_days": 0,
+    "goal": "string",
+    "steps": [{"order": 1, "instruction": "string", "timing": "string"}]
+  },
+  "subscreens": [
+    {"subscreen_id": "nutrition_block", "render_on": "tab_nutrition", "content": {"dos": ["string"], "donts": ["string"]}},
+    {"subscreen_id": "supplement_block", "render_on": "tab_supplements", "content": {"items": [{"name": "string", "dose": "string"}]}},
+    {"subscreen_id": "lifestyle_block", "render_on": "tab_lifestyle", "content": {"habits": ["string"]}}
+  ]
+}</code></pre>
+
+        <h4>6) Protocol Modify — protocol_adjustment_json</h4>
+        <pre><code>{
+  "main_screen": {
+    "change_summary": "string",
+    "adjustments": [{"section": "nutrition|supplement|lifestyle", "old": "string", "new": "string", "reason": "string"}]
+  },
+  "subscreens": [
+    {"subscreen_id": "impact_estimate", "render_on": "expand_impact", "content": {"expected_impact": "string", "time_to_effect_days": 0}}
+  ]
+}</code></pre>
+
+        <h4>7) Health — health_insight_cards_json</h4>
+        <pre><code>{
+  "main_screen": {
+    "chi_score": 0,
+    "headline": "string",
+    "top_contributors": ["string"],
+    "improvement_areas": ["string"]
+  },
+  "subscreens": [
+    {"subscreen_id": "chi_trend", "render_on": "carousel_2", "content": {"points": [{"date": "YYYY-MM-DD", "score": 0}]}},
+    {"subscreen_id": "deep_insight", "render_on": "carousel_3", "content": {"explainability": {"agni": 0, "ojas": 0, "nidra": 0}}}
+  ]
+}</code></pre>
+
+        <h4>8) NSL — nsl_plan_json</h4>
+        <pre><code>{
+  "main_screen": {
+    "plan_title": "string",
+    "nutrition_today": ["string"],
+    "supplements_today": [{"name": "string", "timing": "string", "dose": "string"}],
+    "lifestyle_today": ["string"]
+  },
+  "subscreens": [
+    {"subscreen_id": "meal_plan_carousel", "render_on": "slide_2", "content": {"breakfast": "string", "lunch": "string", "dinner": "string"}},
+    {"subscreen_id": "supplement_schedule_carousel", "render_on": "slide_3", "content": {"schedule": [{"time": "HH:mm", "item": "string"}]}},
+    {"subscreen_id": "habit_tracker_carousel", "render_on": "slide_4", "content": {"habits": [{"name": "string", "target": "string"}]}}
+  ]
+}</code></pre>
+
+        <h4>9) Exposure — exposure_actions_json</h4>
+        <pre><code>{
+  "main_screen": {
+    "exposure_summary": "string",
+    "risk_level": "low|moderate|high",
+    "recommended_actions": ["string"]
+  },
+  "subscreens": [
+    {"subscreen_id": "weather_impact", "render_on": "slide_2", "content": {"temperature_c": 0, "humidity_pct": 0, "dosha_impact": "string"}},
+    {"subscreen_id": "timing_guidance", "render_on": "slide_3", "content": {"best_time_outdoors": "string", "avoid_window": "string"}}
+  ]
+}</code></pre>
+
+        <h4>10) Projects — project_suggestions_json</h4>
+        <pre><code>{
+  "main_screen": {
+    "recommended_projects": [
+      {"project_id": "string", "title": "string", "why_now": "string", "estimated_effort": "low|medium|high"}
+    ]
+  },
+  "subscreens": [
+    {"subscreen_id": "project_detail", "render_on": "expand_project", "content": {"steps": ["string"], "success_metric": "string"}}
+  ]
+}</code></pre>
+
+        <h4>Failure/Fallback Contract</h4>
+        <pre><code>{
+  "status": "fallback",
+  "error_code": "MODEL_TIMEOUT|INVALID_OUTPUT|SAFETY_BLOCK",
+  "user_safe_message": "I could not complete this analysis right now. Please try again.",
+  "main_screen": {},
+  "subscreens": [],
+  "meta": {"all_subscreens_prefetched": false, "schema_version": "v1"}
+}</code></pre>
+      </section>
+
+
+      <h2>Flow Spec Sheet - UI X Backend Interactions (Full Content)</h2>
+<p>Source: UI Backend Interactions - v2.xlsx</p>
+<h3>Screen Flow Matrix v2</h3>
+<table class="table"><thead><tr>
+<th>Screen Name</th>
+<th>Figma Link</th>
+<th>Read Data from DB</th>
+<th>Write Data</th>
+<th>Possible In Routes</th>
+<th>Possible Out Routes</th>
+<th>Interactions with AI / System Logic</th>
+</tr></thead><tbody>
+<tr>
+<td>Onboarding</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3485-632&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>users, user_constitution (if resume), user_health_profile (if resume)</td>
+<td>users (onboarding_complete), user_constitution, user_current_state</td>
+<td>Sign Up / Login</td>
+<td>Today Screen</td>
+<td>Score Prakriti and initialize Vikriti baseline</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>assessment responses (local until submit)</td>
+<td>user_health_profile (goals, baseline constraints)</td>
+<td></td>
+<td>Complete Prakriti Assessment</td>
+<td>Validate required onboarding steps before completion</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>user_twin_preferences</td>
+<td>user_twin_preferences</td>
+<td></td>
+<td>Twin Personalization</td>
+<td>Capture communication style for future responses</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>wearable_data_points summary (if available)</td>
+<td>user_wearable_devices, wearable sync job enqueue</td>
+<td></td>
+<td>Deep-dive Onboarding Chat</td>
+<td>If connected, inject wearable baseline into onboarding context</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>conversation history (onboarding type)</td>
+<td>conversation_messages (onboarding conversation)</td>
+<td></td>
+<td>Protocol Preview</td>
+<td>Generate first protocol draft from onboarding context</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td>protocols (draft-&gt;active), reminder metadata</td>
+<td></td>
+<td></td>
+<td>Activate first protocol and mark onboarding_complete=true</td>
+</tr>
+<tr>
+<td>Today Screen</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3796-3241&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>notifications (morning summary), user_current_state</td>
+<td>conversation_messages (quick chat), daily_checkins</td>
+<td>Login / Notification Tap</td>
+<td>Protocols/Projects</td>
+<td>Assemble summary cards from latest daily context</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>active protocol, protocol_tracking</td>
+<td>protocol_tracking (item completion)</td>
+<td>From Menu</td>
+<td>Check-in</td>
+<td>Update adherence score after each completed action</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>daily_checkins (recent), wearable_data_points (recent)</td>
+<td>daily_checkins (new)</td>
+<td>Chat redirect</td>
+<td>Chat</td>
+<td>Generate concise actionable insight and top priorities</td>
+</tr>
+<tr>
+<td>My Twin</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3533-529&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>user_constitution, user_current_state, twin preferences</td>
+<td>conversation_messages</td>
+<td>Menu / Chat redirect</td>
+<td>Constitution Detail</td>
+<td>Context assembly from constitution + current-state + recent interactions</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>recent daily checkins + wearable summaries</td>
+<td>protocol modification requests (if approved)</td>
+<td></td>
+<td>Intelligence Evolution</td>
+<td>Generate evolution narrative from trend deltas</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>conversation history</td>
+<td></td>
+<td></td>
+<td>Patterns Discovered</td>
+<td>Surface patterns with confidence and short rationale</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Upcoming Predictions</td>
+<td>Run prediction logic and show early warnings</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>twin preferences</td>
+<td>twin preferences</td>
+<td></td>
+<td>Customize Twin</td>
+<td>Persist style/verbosity updates and apply immediately</td>
+</tr>
+<tr>
+<td>Health</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3963-1101&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>insights/health, user_current_state, symptom trends</td>
+<td>health/manual-log (if submitted)</td>
+<td>Menu</td>
+<td>Pillars of Health</td>
+<td>Render health snapshot and trend interpretation</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>insights/wearables</td>
+<td></td>
+<td>Chat redirect</td>
+<td>Dynamic Fluctuation / Metabolic Intensity detail</td>
+<td>Interpret sleep/HRV/activity in Ayurvedic context</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>constitution + current state</td>
+<td></td>
+<td></td>
+<td>Nutrition / Supplement / Lifestyle linked views</td>
+<td>Use same context block for cross-module health coherence</td>
+</tr>
+<tr>
+<td>Exposure</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3863-626&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>location, date/season, constitution, current state</td>
+<td>conversation_messages (if user gives feedback)</td>
+<td>Menu / Chat redirect</td>
+<td>Today Environmental Impact</td>
+<td>Generate environmental impact summary for current location</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>weather and light context</td>
+<td></td>
+<td></td>
+<td>Light Exposure</td>
+<td>Generate light recommendations (timing/intensity)</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>lunar context + profile</td>
+<td></td>
+<td></td>
+<td>Lunar Influence</td>
+<td>Generate lunar interpretation tied to current imbalance</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>astro inputs (when available)</td>
+<td></td>
+<td></td>
+<td>Astrology Influence</td>
+<td>Generate astrology narrative only when inputs are present</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>constitution + current state + day context</td>
+<td></td>
+<td></td>
+<td>Today Focus</td>
+<td>Produce one focused recommendation for the day</td>
+</tr>
+<tr>
+<td>Profile</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3599-749&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>users/me, user_health_profile, twin_preferences, subscriptions/current</td>
+<td>users/me, user_health_profile, twin_preferences</td>
+<td>Menu</td>
+<td>Sub-settings screens</td>
+<td>Primarily CRUD + validation; minimal generation</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>wearable devices</td>
+<td>wearables/connect/disconnect metadata</td>
+<td></td>
+<td>Add Wearable Device</td>
+<td>Persist device connection state</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>notifications settings</td>
+<td>notifications settings + device token</td>
+<td></td>
+<td>Notification Settings</td>
+<td>Save delivery preferences and token mapping</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>privacy settings</td>
+<td>privacy settings</td>
+<td></td>
+<td>Privacy/Data Export</td>
+<td>Honor consent/permissions flags</td>
+</tr>
+<tr>
+<td>Nutrition</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3607-1729&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>insights/nutrition, meal logs, constitution</td>
+<td>meal logs, scan_analyses (meal)</td>
+<td>Menu / Chat redirect</td>
+<td>Log Meal</td>
+<td>Generate nutrition suggestions from six-taste and dosha balance</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>meal timing patterns + routine data</td>
+<td></td>
+<td></td>
+<td>Optimal Meal Timing</td>
+<td>Recommend timing based on trends and constitution</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>weekly nutrition aggregates</td>
+<td></td>
+<td></td>
+<td>Weekly Nutrition Analysis</td>
+<td>Summarize weekly nutrition pattern and gaps</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>constitution food mapping</td>
+<td></td>
+<td></td>
+<td>Constitutional Food Guide</td>
+<td>Show personalized food guidance card set</td>
+</tr>
+<tr>
+<td>Supplements</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3661-649&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>current supplements, interactions, adherence</td>
+<td>protocol update requests + adherence notes</td>
+<td>Menu / Chat redirect</td>
+<td>Supplement Schedule</td>
+<td>Safety-first interpretation and recommendation display</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>supplement outcomes and symptom links</td>
+<td></td>
+<td></td>
+<td>Effectiveness / Slack</td>
+<td>Assess effectiveness using recent logs and trends</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>interaction checks + contraindications</td>
+<td></td>
+<td></td>
+<td>Safety and Interaction Check</td>
+<td>Always run interaction guard before surfacing advice</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>herb knowledge cache</td>
+<td></td>
+<td></td>
+<td>Ayurvedic Herb Library</td>
+<td>Fetch from cache, generate only when not cached</td>
+</tr>
+<tr>
+<td>Lifestyle</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3681-750&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>routine logs, checkins, wearable trends</td>
+<td>routine/practice logs</td>
+<td>Menu / Chat redirect</td>
+<td>Daily Routine</td>
+<td>Generate routine adjustments from adherence + imbalance</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>session templates + user context</td>
+<td>session activity logs</td>
+<td></td>
+<td>Start a Session</td>
+<td>Persist session outputs for trend analysis</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>analytics aggregates</td>
+<td></td>
+<td></td>
+<td>Analytics / Weekly Overview</td>
+<td>Render week-over-week lifestyle trends</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>season + location + constitution</td>
+<td></td>
+<td></td>
+<td>Ritucharya</td>
+<td>Generate seasonal adjustments for current context</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>practice history</td>
+<td>practice logs</td>
+<td></td>
+<td>Practice</td>
+<td>Track and reinforce practice consistency</td>
+</tr>
+<tr>
+<td>Projects</td>
+<td>https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-?node-id=3685-1810&amp;t=P1n9DAMthEgqlEVX-4</td>
+<td>projects, linked protocols, milestones, progress</td>
+<td>projects create/update, milestones, linked protocol updates</td>
+<td>Menu / Chat redirect / Onboarding completion</td>
+<td>Active Projects</td>
+<td>Generate project recommendations from goals + health context</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>project-level adherence + outcomes</td>
+<td></td>
+<td></td>
+<td>Recommendations</td>
+<td>Update suggestions based on progress delta</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td>new project record + milestones</td>
+<td></td>
+<td>Create New Project</td>
+<td>Initialize project lifecycle state</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>individual project detail</td>
+<td>individual project updates</td>
+<td></td>
+<td>Project Detail / Completion</td>
+<td>Assess completion and trigger next-step recommendations</td>
+</tr>
+</tbody></table>
+<h3>Interaction Flows v2</h3>
+<table class="table"><thead><tr>
+<th></th>
+<th></th>
+<th></th>
+</tr></thead><tbody>
+<tr>
+<td>Sign Up</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User Request</td>
+<td>UI Response</td>
+<td>Backend Operations</td>
+</tr>
+<tr>
+<td>User clicks Sign Up</td>
+<td>Sign up options screen opens (Google/Apple/Email)</td>
+<td>Route to signup screen</td>
+</tr>
+<tr>
+<td>User selects provider</td>
+<td>Provider-specific auth form opens</td>
+<td>Initiate provider auth flow and validate callback</td>
+</tr>
+<tr>
+<td>User completes signup</td>
+<td>User lands in onboarding start</td>
+<td>Create user, issue tokens, set onboarding_complete=false</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Login</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User clicks Login</td>
+<td>Login options screen opens</td>
+<td>Route to login screen</td>
+</tr>
+<tr>
+<td>User submits credentials/provider auth</td>
+<td>If onboarding incomplete -&gt; Onboarding; else -&gt; Today</td>
+<td>Validate session and route by onboarding_complete flag</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Onboarding</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User submits onboarding details</td>
+<td>Progresses to next onboarding step or missing-data prompt</td>
+<td>Score constitution, save profile/state, enforce required fields</td>
+</tr>
+<tr>
+<td>User connects wearable (optional in base PRD)</td>
+<td>Connection status shown</td>
+<td>Register wearable source and enqueue initial sync</td>
+</tr>
+<tr>
+<td>User completes onboarding chat</td>
+<td>Protocol preview shown</td>
+<td>Persist onboarding conversation and generate first protocol draft</td>
+</tr>
+<tr>
+<td>User accepts first protocol</td>
+<td>Redirect to Today screen</td>
+<td>Activate protocol and mark onboarding_complete=true</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Today</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User opens Today</td>
+<td>Morning summary + status + today actions rendered</td>
+<td>Fetch latest summary, current state, active protocol, today tracking state</td>
+</tr>
+<tr>
+<td>User marks an action complete</td>
+<td>Action tile updates immediately</td>
+<td>Upsert protocol_tracking and recalculate adherence</td>
+</tr>
+<tr>
+<td>User starts daily check-in</td>
+<td>Check-in modal and insight response shown</td>
+<td>Save check-in, update Vikriti, return quick insight</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>My Twin</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User opens My Twin</td>
+<td>Twin overview loads</td>
+<td>Fetch constitution/current state/preferences and recent context</td>
+</tr>
+<tr>
+<td>User navigates to Intelligence Evolution / Patterns / Predictions</td>
+<td>Corresponding card/slide renders</td>
+<td>Generate and cache card payloads from user context</td>
+</tr>
+<tr>
+<td>User customizes Twin style</td>
+<td>Updated Twin style reflected in UI</td>
+<td>Update twin preferences</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Health</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User opens Health screen</td>
+<td>Health dashboard cards render</td>
+<td>Fetch insights/health and state summaries</td>
+</tr>
+<tr>
+<td>User opens metric detail (sleep, HRV, pillars)</td>
+<td>Detail views and trends render</td>
+<td>Fetch insights/wearables and trend windows</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Exposure</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User opens Exposure</td>
+<td>Environmental impact card renders</td>
+<td>Resolve location/date + profile context, generate exposure guidance</td>
+</tr>
+<tr>
+<td>User browses Light/Lunar/Astrology/Focus cards</td>
+<td>Carousel cards render</td>
+<td>Load or generate card-specific interpretation payload</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Profile</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User opens Profile</td>
+<td>Profile sections render</td>
+<td>Fetch users/me + health profile + preferences + subscription summary</td>
+</tr>
+<tr>
+<td>User updates goals/preferences</td>
+<td>Saved confirmation state shown</td>
+<td>Validate and persist profile/preference updates</td>
+</tr>
+<tr>
+<td>User configures notifications</td>
+<td>Notification setting toggles persist</td>
+<td>Save device token/settings and update notification prefs</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Nutrition</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User opens Nutrition</td>
+<td>Nutrition overview and guidance render</td>
+<td>Fetch nutrition insights + meal log summary + constitution context</td>
+</tr>
+<tr>
+<td>User logs meal (manual/photo)</td>
+<td>Meal log entry appears</td>
+<td>Save meal log, trigger optional scan analysis, refresh nutrition summary</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Supplements</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User opens Supplements</td>
+<td>Schedule/effectiveness/safety cards render</td>
+<td>Fetch supplement recommendations and interaction checks</td>
+</tr>
+<tr>
+<td>User requests supplement change</td>
+<td>Updated recommendation shown</td>
+<td>Run safety check and save protocol modification if approved</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Lifestyle</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User opens Lifestyle</td>
+<td>Routine and analytics cards render</td>
+<td>Fetch lifestyle logs + check-in trends + wearable context</td>
+</tr>
+<tr>
+<td>User starts a guided session/practice log</td>
+<td>Session UI and completion state shown</td>
+<td>Store session/practice log and update adherence signals</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Projects</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User opens Projects</td>
+<td>Project list and progress render</td>
+<td>Fetch projects and linked protocol progress</td>
+</tr>
+<tr>
+<td>User creates a new project</td>
+<td>New project detail page opens</td>
+<td>Create project record and initialize milestones</td>
+</tr>
+<tr>
+<td>User requests recommendations in project</td>
+<td>Recommendation block renders</td>
+<td>Generate recommendations from project goal + health context</td>
+</tr>
+</tbody></table>
+
+      <h2>🗺️ MVP Development Roadmap (285 Hours)</h2>
+      <p style="margin-bottom:12px">Execution plan to deliver the full AyuAware MVP within a strict 285-hour budget.</p>
+      <p style="margin:0 0 12px"><b>Request:</b> Allocate <b>$500</b> in AI model/API credits for MVP development, testing, and validation.</p>
+      <table class="table roadmap-table" aria-label="MVP Development Roadmap">
+        <thead>
+          <tr>
+            <th>Phase</th>
+            <th>Scope</th>
+            <th>Hours</th>
+            <th>Weeks (30h/week)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>0. OpenClaw Exploration and Setup</b></td>
+            <td>OpenClaw exploration, local/vps setup, runtime checks, and baseline agent workflow configuration for team execution.</td>
+            <td><b>15h</b></td>
+            <td><b>0.5</b></td>
+          </tr>
+          <tr>
+            <td><b>1. Foundations & Setup</b></td>
+            <td>Repo hygiene, environments, CI/CD baseline, auth foundation, app shell, API scaffolding, schema baseline.</td>
+            <td><b>30h</b></td>
+            <td><b>1.0</b></td>
+          </tr>
+          <tr>
+            <td><b>2. Core Onboarding + Twin</b></td>
+            <td>Onboarding capture, prakriti/vikriti flow wiring, My Twin initial rendering, profile + state persistence.</td>
+            <td><b>55h</b></td>
+            <td><b>1.8</b></td>
+          </tr>
+          <tr>
+            <td><b>3. Today + Check-ins + Protocol Core</b></td>
+            <td>Daily check-ins, protocol generation pipeline, protocol display/actions, response guardrails, save/update loops.</td>
+            <td><b>70h</b></td>
+            <td><b>2.3</b></td>
+          </tr>
+          <tr>
+            <td><b>4. Data Integrations</b></td>
+            <td>Spike wearable ingestion, report/scan upload pipeline, object storage integration, metadata + processing states.</td>
+            <td><b>40h</b></td>
+            <td><b>1.3</b></td>
+          </tr>
+          <tr>
+            <td><b>5. Chat + History + Reliability</b></td>
+            <td>General query chat flow, context gather layer, conversation history, logging, error handling, fallback behavior.</td>
+            <td><b>35h</b></td>
+            <td><b>1.2</b></td>
+          </tr>
+          <tr>
+            <td><b>6. QA, UAT, Launch Readiness</b></td>
+            <td>End-to-end testing, bug fixing, performance pass, security checks, deployment hardening, release checklist.</td>
+            <td><b>40h</b></td>
+            <td><b>1.3</b></td>
+          </tr>
+          <tr>
+            <td><b>Total</b></td>
+            <td>MVP delivery target within budgeted engineering effort.</td>
+            <td><b>285h</b></td>
+            <td><b>9.5</b></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px">Recommended planning baseline: 30 hours/week.</p>
+    </section>
+
+    <section>
+      <h2>🚀 Next Phase (Post-MVP Expansion)</h2>
+      <h3 style="margin:8px 0 6px;color:var(--a)">1. Shop</h3>
+      <p>Launch a curated Ayurvedic marketplace with products mapped to each user profile and current imbalance so recommendations are relevant and actionable.</p>
+      <p style="margin-top:6px">Build baseline: based on approved Shop screens in Figma (<a href="https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-" target="_blank" rel="noopener">open file</a>).</p>
+
+      <h3 style="margin:10px 0 6px;color:var(--a)">2. Learn</h3>
+      <p>Introduce a guided learning experience with structured paths, lesson progression, and streak-based engagement to build long-term Ayurvedic literacy.</p>
+      <p style="margin-top:6px">Build baseline: based on approved Learn screens in Figma (<a href="https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-" target="_blank" rel="noopener">open file</a>).</p>
+
+      <h3 style="margin:10px 0 6px;color:var(--a)">3. Practitioner in the Loop</h3>
+      <p>Enable certified practitioner collaboration through chat escalation so users can get human review for complex or higher-risk health decisions.</p>
+      <p style="margin-top:6px">Build baseline: based on approved Practitioner-in-the-loop flows/screens in Figma (<a href="https://www.figma.com/design/ZcQkSKWkfzN9mMkCh30bvJ/AyuAware--Copy-" target="_blank" rel="noopener">open file</a>).</p>
+
+      <h3 style="margin:10px 0 6px;color:var(--a)">4. Intelligence Evolution</h3>
+      <p>Upgrade the intelligence layer with vector retrieval, fine-tuned models, and stronger orchestration to improve personalization, consistency, and safety. Future Direction: Adaptive Server-Driven UI using a whitelisted component registry, schema versioning, and fallback to static layouts.</p>
+
+      <h3 style="margin:10px 0 6px;color:var(--a)">5. Scaling</h3>
+      <p>Harden infrastructure, monitoring, and cost controls to support higher concurrent usage while maintaining response quality and predictable operating costs.</p>
+    </section>
+
+  </div>
+
+</body>
+</html>
