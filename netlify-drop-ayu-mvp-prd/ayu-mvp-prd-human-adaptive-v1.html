@@ -3,40 +3,66 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AyuAware MVP Development PRD - Bot Version</title>
+  <title>AyuAware MVP Development PRD</title>
   <style>
-body{margin:0;padding:20px;max-width:1100px;font-family:Arial,Helvetica,sans-serif;line-height:1.5;color:#111;background:#fff}
-a{color:#0645ad}
-h1,h2,h3{margin:16px 0 8px}
-p,li{margin:6px 0}
-img{max-width:100%;height:auto}
-.table{width:100%;border-collapse:collapse;font-size:14px}
-.table th,.table td{border:1px solid #ccc;padding:8px;vertical-align:top}
-.table th{text-align:left;background:#f4f4f4}
-section{margin-bottom:18px}
-.prompt-map-table{table-layout:auto;font-size:13px}
-.prompt-map-table th,.prompt-map-table td{white-space:normal;word-break:break-word;overflow-wrap:anywhere}
-.prompt-map-table th:nth-child(1), .prompt-map-table td:nth-child(1){width:28%}
-.prompt-map-table th:nth-child(2), .prompt-map-table td:nth-child(2){width:16%}
-.prompt-map-table th:nth-child(3), .prompt-map-table td:nth-child(3){width:24%}
-.prompt-map-table th:nth-child(4), .prompt-map-table td:nth-child(4){width:22%}
-.prompt-map-table th:nth-child(5), .prompt-map-table td:nth-child(5){width:10%}
-.roadmap-table{table-layout:auto}
-.roadmap-table th,.roadmap-table td{white-space:normal;word-break:normal;overflow-wrap:normal}
-.optional-step td{background:#f9f9f9}
-.muted{color:#444}
-</style>
+    :root{--bg:#f7f2e8;--card:#fffaf1;--line:#ddcfb6;--txt:#2f2a22;--muted:#6d6558;--a:#2f7f6d;--b:#c06c3e;--c:#7a8f3a;--e:#c79a2b;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(1200px 500px at 20% -10%,#efe4cf 0%,var(--bg) 55%);color:var(--txt)}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
+    .hero{background:linear-gradient(135deg,#f1e5cf,#eadcc2);border:1px solid #cfba95;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 10px 24px rgba(108,88,58,.12)}
+    .hero h1{margin:0 0 10px;font-size:32px}
+    .hero p{margin:0;line-height:1.6;font-size:16px}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid #c9b28c;background:#f3e8d4;color:#5a4d3b;font-size:12px;margin-right:8px}
+    .section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+    h2{margin:0 0 10px}
+    .muted{color:var(--muted)}
+    .spark{height:4px;border-radius:999px;background:linear-gradient(90deg,var(--a),var(--b),var(--c),var(--e));margin:10px 0 14px}
+    details.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0;margin:14px 0;overflow:hidden}
+    details.card>summary{cursor:pointer;list-style:none;padding:14px 16px;font-weight:700;background:#f2e6d2;border-bottom:1px solid #cfba95}
+    details.card>summary::-webkit-details-marker{display:none}
+    details.card>summary::after{content:"▸";float:right;color:#8d7a5c;transition:transform .2s ease}
+    details.card[open]>summary::after{transform:rotate(90deg)}
+    .content{padding:0 16px 16px}
+    code{background:#f2e8d8;padding:2px 6px;border-radius:6px;border:1px solid #cfba95;color:#4a3f31}
+    .table{width:100%;border-collapse:collapse;font-size:15px;table-layout:fixed; line-height:1.6}
+    .table th,.table td{padding:10px;border-bottom:1px dashed #cfba95;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;white-space:normal}
+    .table th{color:#4d4233;text-align:left;background:#f2e6d2}
+    .table th:nth-child(1), .table td:nth-child(1){width:27%}
+    .table th:nth-child(2), .table td:nth-child(2){width:22%}
+    .table th:nth-child(3), .table td:nth-child(3){width:51%}
+    .badge{font-size:11px;border:1px solid #cfba95;border-radius:999px;padding:3px 8px;display:inline-block;max-width:100%;white-space:normal}
+
+    .roadmap-table{table-layout:auto}
+    .roadmap-table th,.roadmap-table td{white-space:normal;word-break:normal;overflow-wrap:normal}
+    .roadmap-table th:nth-child(1), .roadmap-table td:nth-child(1){width:25%}
+    .roadmap-table th:nth-child(2), .roadmap-table td:nth-child(2){width:47%}
+    .roadmap-table th:nth-child(3), .roadmap-table td:nth-child(3){width:12%}
+    .roadmap-table th:nth-child(4), .roadmap-table td:nth-child(4){width:16%}
+    .prompt-map-table{table-layout:auto;font-size:13px}
+    .prompt-map-table th,.prompt-map-table td{white-space:normal;word-break:break-word;overflow-wrap:anywhere}
+    .prompt-map-table th:nth-child(1), .prompt-map-table td:nth-child(1){width:28%}
+    .prompt-map-table th:nth-child(2), .prompt-map-table td:nth-child(2){width:16%}
+    .prompt-map-table th:nth-child(3), .prompt-map-table td:nth-child(3){width:24%}
+    .prompt-map-table th:nth-child(4), .prompt-map-table td:nth-child(4){width:22%}
+    .prompt-map-table th:nth-child(5), .prompt-map-table td:nth-child(5){width:10%}
+
+    .good{color:#b9f6ca}.req{color:#ffd59e}.opt{color:#b0d1ff}
+    .optional-step td{background:#eef7f3}
+    .optional-step td:first-child{border-left:4px solid #2f7f6d}
+    .optional-step td:last-child{font-weight:700;color:#2c6d5e}
+  
+    .tech-card {background: linear-gradient(145deg, #fffaf1, #f6ecd9); border: 1px solid #d8c5a2; border-left: 4px solid #2f7f6d; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(108,88,58,0.1);}
+    .tech-card h3 {margin: 0 0 8px 0; color: #2f7f6d; font-size: 22px; display: flex; align-items: center; gap: 8px;}
+    .tech-card p {margin: 0 0 10px 0; line-height: 1.6;}
+    .tech-role {color: #8b5a3c; font-weight: 600; margin-bottom: 6px; font-size: 15px;}
+
+  </style>
 </head>
 <body>
-<!-- main-prd-back-link -->
-<div id="main-prd-backlink" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,250,240,.95);border:1px solid #d8cbb2;border-radius:999px;padding:7px 12px;font-family:Arial,sans-serif;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.12);">
-  <a href="/ayu-mvp-prd-human-adaptive-v1.html" style="color:#1f7f6e;text-decoration:none;font-weight:700;">Back to Human PRD</a>
-</div>
-
-    <div>
-    <section>
+    <div class="wrap">
+    <section class="hero">
       <h1>🌿 AyuAware MVP Development PRD</h1>
-      <p style="margin-top:6px">Human Version of this Page - <a href="./ayu-mvp-prd-human-adaptive-v1.html" style="color:var(--a);font-weight:600">Open Human Version</a></p>
+      <p style="margin-top:6px">Bot Version of this Page - <a href="./ayu-mvp-prd-bot.html" style="color:var(--a);font-weight:600">Open Bot Version</a></p>
       <h2 style="margin:8px 0 10px;font-size:20px;color:#4d4233">Introduction</h2>
       <p style="margin-top:10px">
         This document will serve as the one source of truth for the development of AyuAware on iOS and Android.
@@ -50,9 +76,9 @@ section{margin-bottom:18px}
 
 
     
-    <details>
-      <summary>✅ MVP Scope Boundary (Based on Sections in Figma UI Design File) (click to expand)</summary>
-      <div>
+    <details class="card">
+      <summary>✅ MVP Scope Boundary (Based on Sections in Figma UI Design File) <span style="font-weight:500;font-size:12px;color:var(--muted)">(click to expand)</span></summary>
+      <div class="content">
       <p class="muted">This section clearly defines what is committed for the MVP release versus what is intentionally deferred.</p>
       <h3 style="margin:10px 0 6px">Included in MVP</h3>
       <ul style="margin:0 0 10px 18px;line-height:1.6">
@@ -74,9 +100,9 @@ section{margin-bottom:18px}
     </div>
     </details>
 
-    <details>
-      <summary>⚙️ Tech Stack (click to expand)</summary>
-      <div>
+    <details class="card">
+      <summary>⚙️ Tech Stack <span style="font-weight:500;font-size:12px;color:var(--muted)">(click to expand)</span></summary>
+      <div class="content">
       <h3 style="margin:6px 0 10px">📱 Mobile App Stack (Frontend)</h3>
       <p class="muted" style="font-size: 16px; margin-bottom: 20px;">The technologies that will build the actual AyuAware app on the user's phone.</p>
 
@@ -93,7 +119,9 @@ section{margin-bottom:18px}
         <p>Normally, building a mobile app requires fighting with Apple's Xcode or Android Studio. Expo handles all of that complex compiling in the cloud.</p>
         <p><b>Why for MVP:</b> It allows us to preview the app instantly on physical phones via a QR code. More importantly, it allows for <b>Over-The-Air (OTA) updates</b>. If we find a bug in the protocol UI, we can push a fix directly to users' phones immediately, without waiting for Apple's App Store review process.</p>
       </div>
-<h3 style="margin:2px 0 10px">⚙️ Backend Stack & Infra (MVP)</h3>
+      <div class="spark"></div>
+
+      <h3 style="margin:2px 0 10px">⚙️ Backend Stack & Infra (MVP)</h3>
       <p class="muted" style="font-size: 16px; margin-bottom: 20px;">The servers, databases, and APIs that power the AyuAware intelligence.</p>
 
       <div class="tech-card">
@@ -137,9 +165,9 @@ section{margin-bottom:18px}
         <p style="margin-top:10px" class="muted"><b>Why not store files directly in Neon?</b> We keep binary files (images/PDFs) in object storage because it is cheaper and optimized for large files, while Neon/Postgres stays focused on structured app data and file metadata (URLs, timestamps, analysis status). This keeps database performance healthy as usage grows.</p>
       </div>
       
-      <details style="margin-top:14px">
+      <details class="card" style="margin-top:14px">
         <summary>🔐 Environment & API Keys (click to expand)</summary>
-        <div>
+        <div class="content">
           <p class="muted">Kept intentionally minimal for MVP. Most teams only need to touch these values.</p>
 
           <h3 style="margin:10px 0 6px;color:var(--a)">A) Runtime essentials (.env)</h3>
@@ -164,15 +192,18 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
           </table>
         </div>
       </details>
-</div>
+      <div class="spark"></div>
+    </div>
     </details>
 
-    <section>
+    <section class="section">
       <h2>🧱 Data Structures</h2>
       <p class="muted">Expandable cards below — click to open/close each object.</p>
-<details>
+      <div class="spark"></div>
+
+      <details class="card">
         <summary>🧑 User Object (<code>users</code>)</summary>
-        <div>
+        <div class="content">
           <p class="muted">Core identity + plan + lifecycle fields for MVP.</p>
           <table class="table">
             <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
@@ -193,9 +224,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>🧬 Prakriti Object (<code>user_constitution</code>)</summary>
-        <div>
+        <div class="content">
           <p class="muted">Aligned to latest team context: <b>18-question</b> questionnaire + scoring versioning.</p>
           <table class="table">
             <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
@@ -227,9 +258,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>⚖️ Vikriti Snapshot (<code>user_current_state</code>)</summary>
-        <div>
+        <div class="content">
           <table class="table">
             <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
             <tbody>
@@ -252,9 +283,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>📝 Daily Check-ins (<code>daily_checkins</code>)</summary>
-        <div>
+        <div class="content">
           <table class="table">
             <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
             <tbody>
@@ -273,9 +304,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>📡 Wearable Stream via Spike (<code>wearable_data_points</code>)</summary>
-        <div>
+        <div class="content">
           <table class="table">
             <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
             <tbody>
@@ -294,9 +325,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>🧪 Lab Reports (<code>lab_results</code>)</summary>
-        <div>
+        <div class="content">
           <table class="table">
             <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
             <tbody>
@@ -318,9 +349,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>📸 Scan Reports (<code>scan_analyses</code>)</summary>
-        <div>
+        <div class="content">
           <table class="table">
             <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
             <tbody>
@@ -339,9 +370,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>🧭 Protocol Data Structures</summary>
-        <div>
+        <div class="content">
           <p class="muted">Structured protocol planning, tasks, logs, events, and outcomes.</p>
 
           <p class="muted"><b><code>protocols</code></b></p>
@@ -437,9 +468,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>🗣️ Twin + Chat Data Structures (from My Twin screens)</summary>
-        <div>
+        <div class="content">
           <p class="muted">Aligned to Twin UI flows: ask-anything chat, learning progress, pattern cards, predictions, notification settings, and privacy/data-source preferences.</p>
 
           <p class="muted"><b><code>conversations</code></b> <span class="badge req">MVP core</span></p>
@@ -525,9 +556,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>🥗 Nutrition, Supplements & Lifestyle</summary>
-        <div>
+        <div class="content">
           <p class="muted">Proposed from Nutrition/Supplements screens + lifestyle signals visible in Health/Exposure screens.</p>
 
           <p class="muted"><b><code>nutrition_logs</code></b> <span class="badge req">MVP core</span></p>
@@ -664,9 +695,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>🌤️ Exposure & ❤️ Health</summary>
-        <div>
+        <div class="content">
           <p class="muted">Dedicated drill from Exposure + Health screens (CHI, drivers, trends, recommendations).</p>
 
           <p class="muted"><b><code>health_chi_components_daily</code></b> <span class="badge req">MVP useful</span></p>
@@ -742,11 +773,11 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
 
     </section>
 
-    <section>
+    <section class="section">
       <h2>🧭 Flows</h2>
-<details>
-      <summary>🧠 Intelligence Prompt Architecture (click to expand)</summary>
-      <div>
+<details class="card">
+      <summary>🧠 Intelligence Prompt Architecture <span style="font-weight:500;font-size:12px;color:var(--muted)">(click to expand)</span></summary>
+      <div class="content">
         <p class="muted">Defines how AI behavior is controlled consistently across all screens.</p>
 
         <h3 style="margin:10px 0 6px">Core Model</h3>
@@ -843,33 +874,33 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
     </details>
 
 
-      <details>
+      <details class="card">
         <summary>Flow 1 — Master Site Flow</summary>
-        <div>
+        <div class="content">
           <img src="./master-site-flow.jpg" alt="Master Site Flow" style="width:100%;border-radius:10px;border:1px solid #cfba95;background:#f7f2e8" />
         </div>
       </details>
-      <details>
+      <details class="card">
         <summary>Flow 2 — Onboarding Flow (Detailed)</summary>
-        <div>
+        <div class="content">
           <img src="./flow-onboarding.jpg" alt="Onboarding Flow" style="width:100%;border-radius:10px;border:1px solid #cfba95;background:#f7f2e8" />
         </div>
       </details>
-      <details>
+      <details class="card">
         <summary>Flow 3 — General User Query Flow (Onboarded User)</summary>
-        <div>
+        <div class="content">
           <img src="./flow-general-query.jpg" alt="General User Query Flow" style="width:100%;border-radius:10px;border:1px solid #cfba95;background:#f7f2e8" />
         </div>
       </details>
-      <details>
+      <details class="card">
         <summary>Flow 4 — Rendering Any Screen (My Twin as Example)</summary>
-        <div>
+        <div class="content">
           <img src="./flow-rendering-screen.jpg" alt="Rendering any Screen (My Twin as Example)" style="width:100%;border-radius:10px;border:1px solid #cfba95;background:#f7f2e8" />
         </div>
       </details>
-      <details>
+      <details class="card">
         <summary>Flow 5 — Screen-to-Prompt Mapping (AyuAware)</summary>
-        <div>
+        <div class="content">
           <p class="muted">Maps each screen/flow to its AI action and specialized sub-prompt.</p>
           <table class="table prompt-map-table">
             <thead><tr><th>Screen / Flow</th><th>action_type</th><th>sub_prompt_id</th><th>Primary Output</th><th>Release</th></tr></thead>
@@ -891,9 +922,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>Flow 6 — AI JSON Contracts (MVP + Sub-screens)</summary>
-        <div>
+        <div class="content">
           <p class="muted">These are v1 payload contracts for AI responses per MVP screen/action. Contracts include sub-screen support so carousel panels can render from a single API response.</p>
 
           <h3 style="margin:10px 0 6px">Common Response Envelope (All AI Actions)</h3>
@@ -1069,9 +1100,9 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
         </div>
       </details>
 
-      <details>
+      <details class="card">
         <summary>Flow Spec Sheet - UI X Backend Interactions</summary>
-        <div>
+        <div class="content">
           <p class="muted">Polished interaction-flow spreadsheet aligned with PRD structure.</p>
           <p><a href="./bot-docs/flow-spec-ui-x-backend-interactions.html" style="color:var(--a);font-weight:600">Open Bot-readable Flow Spec Page</a></p>
         </div>
@@ -1081,7 +1112,7 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
 
     
 
-    <section>
+    <section class="section">
       <h2>🗺️ MVP Development Roadmap (285 Hours Base Plan)</h2>
       <p class="muted" style="margin-bottom:12px">Execution plan to deliver the full AyuAware MVP within a strict 285-hour budget.</p>
       <p class="muted" style="margin:0 0 12px"><b>Request:</b> Allocate <b>$500</b> in AI model/API credits for MVP development, testing, and validation.</p>
@@ -1154,10 +1185,12 @@ AI_DEFAULT_MODEL=claude-sonnet-4.6
       <p class="muted" style="margin-top:10px">Recommended planning baseline: 30 hours/week.</p>
       <p class="muted" style="margin-top:6px"><b>Roadmap Clarification:</b> 285h is the current base MVP plan. Dynamic Page Rendering (~60-80 hrs) and OpenClaw setup are discussion-driven extensions and are not silently included in the 285h total.</p>
     </section>
-    <section>
+    <section class="section">
       <h2>🧩 Dynamic Page Rendering Feature</h2>
       <p class="muted">Requirement-level module direction for MVP. This does not add full builder tooling scope. Exact implementation details may change.</p>
-<h3 style="margin:10px 0 6px">Module Description</h3>
+      <div class="spark"></div>
+
+      <h3 style="margin:10px 0 6px">Module Description</h3>
       <p>Instead of keeping all user surfaces fully hardcoded, AyuAware will support adaptive rendering for selected screen families. MVP render precedence is simple: <b>AI-generated, admin-approved screens first</b>, then <b>hardcoded fallback screens</b>. Adaptive output must use approved templates, components, and guidelines under versioned schema contracts. Admins can publish template/rule updates through an OpenClaw-assisted workflow or a built-in dashboard (mechanism to be finalized).</p>
       <p>We need to build this as a controlled template system, not a free-form AI screen generator: define a fixed set of allowed screen blocks, let admins compose approved templates from those blocks, and let the backend choose one approved template at runtime based on user state. Before anything is rendered, the system should run clear checks (template validity, confidence, timeout), and if any check fails, it should immediately return the existing hardcoded screen. Every template/rule update should be versioned with rollback so changes are safe and reversible. Because this affects product behavior, reliability, and long-term scalability, more time should be allocated to discussion, design decisions, and implementation detailing before finalizing build scope.</p>
 
